@@ -1,6 +1,6 @@
 # Didanihaa · دیدنی‌ها
 
-![Didanihaa mark](src/Didanihaa.Web/assets/brand/logomark.svg)
+<img src="src/Didanihaa.Web/assets/brand/logomark.svg" alt="Didanihaa mark" width="72" height="72">
 
 A portable Windows media library for your local network. Select files from your own folders and play them in a TV, desktop or mobile browser.
 

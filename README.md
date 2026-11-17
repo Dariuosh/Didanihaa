@@ -1,6 +1,6 @@
 # دیدنی‌ها · Didanihaa
 
-![نشان دیدنی‌ها](src/Didanihaa.Web/assets/brand/logomark.svg)
+<img src="src/Didanihaa.Web/assets/brand/logomark.svg" alt="نشان دیدنی‌ها" width="72" height="72">
 
 کتابخانهٔ شخصی صدا و ویدیو برای ویندوز و شبکهٔ محلی؛ فایل‌های دلخواهتان را از پوشه‌ها انتخاب کنید و با مرورگر تلویزیون، رایانه یا گوشی پخش کنید.
 
