@@ -20,7 +20,11 @@
 - پخش فایل اصلی با HTTP Range و HEAD؛ بدون تبدیل کدک یا remux.
 - تنظیمات و SQLite زیر ریشهٔ قابل انتقال؛ اجرای کنسولی یا Media به‌صورت Windows Service.
 
-## ساخت و اجرا
+## دریافت نسخهٔ آماده
+
+بستهٔ Windows x64 را از [Releases](https://github.com/Dariuosh/Didanihaa/releases) دریافت و استخراج کنید. با PowerShell 7 از پوشهٔ برنامه، `.\tools\Start-Didanihaa.ps1` را اجرا کنید؛ SDK و Node.js برای اجرای بسته لازم نیستند. [راهنمای بستهٔ قابل حمل](tools/Portable-README.md) نصب و به‌روزرسانی را توضیح می‌دهد.
+
+## ساخت از سورس
 
 پیش‌نیاز ساخت: Windows x64، PowerShell 7، [.NET SDK](https://dotnet.microsoft.com/download) مطابق [global.json](global.json)، و Node.js نسخهٔ 22.18 یا جدیدتر همراه npm. پروژه C# 15 / .NET 11، TypeScript، Lit و Vite دارد. اجرای بستهٔ پیش‌فرض self-contained به نصب SDK یا Node نیاز ندارد.
 
@@ -103,7 +107,7 @@ Vite فقط روی `127.0.0.1:5211` است و به gateway روی `13521` پرا
 
 ## محدودیت‌ها
 
-DLNA، Chromecast، transcoding/remux، زیرنویس قابل انتخاب، watcher و زمان‌بندی اسکن در این نسخه پیاده نشده‌اند. کدک و ریموت باید روی تلویزیون واقعی آزموده شوند. نصب واقعی Windows Service، مجوز NTFS و اجرای پس از reboot نیز به بررسی تعاملی نیاز دارند.
+DLNA، Chromecast، transcoding/remux، زیرنویس قابل انتخاب، watcher و زمان‌بندی اسکن در این نسخه پیاده نشده‌اند. سازگاری کدک و کنترل پخش به دستگاه و مرورگر بستگی دارد. دسترسی Windows Service به رسانه‌ها تابع مجوزهای NTFS حساب سرویس است.
 
 ## مجوز
 

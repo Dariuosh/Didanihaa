@@ -3,7 +3,9 @@ param([string]$InterfaceAlias)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'internal\Launcher.Common.ps1')
 $runtimeRoot = Get-PublishedRuntimeRoot
-$configuration = Get-Content -Raw -LiteralPath (Join-Path $runtimeRoot 'didanihaa.json') | ConvertFrom-Json
+$configurationPath = Join-Path $runtimeRoot 'didanihaa.json'
+if (-not (Test-Path -LiteralPath $configurationPath)) { $configurationPath = Join-Path $runtimeRoot 'didanihaa.example.json' }
+$configuration = Get-Content -Raw -LiteralPath $configurationPath | ConvertFrom-Json
 $program = Join-Path $runtimeRoot 'apps\control\Didanihaa.Control.exe'
 if (-not (Test-Path -LiteralPath $program)) { throw 'Build the published application first.' }
 $interfaces = @(Get-NetIPConfiguration | Where-Object {

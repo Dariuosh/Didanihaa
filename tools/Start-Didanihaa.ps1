@@ -3,6 +3,7 @@ param([switch]$NoBrowser)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'internal\Launcher.Common.ps1')
 $runtimeRoot = Get-PublishedRuntimeRoot
+Initialize-LocalConfiguration -Root $runtimeRoot
 $configuration = Get-Content -Raw -LiteralPath (Join-Path $runtimeRoot 'didanihaa.json') | ConvertFrom-Json
 $controlExecutable = Join-Path $runtimeRoot 'apps\control\Didanihaa.Control.exe'
 $mediaExecutable = Join-Path $runtimeRoot 'apps\host\Didanihaa.Host.exe'

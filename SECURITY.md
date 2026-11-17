@@ -26,4 +26,4 @@ When the repository's private vulnerability reporting is enabled, use **Security
 
 If private reporting is unavailable, open an issue containing only a request for a private contact channel. The maintainer should enable private reporting before accepting detailed security reports.
 
-This project is under active development. Unit tests use isolated catalogs; real TV acceptance and interactive Windows Service/UAC/NTFS/reboot behavior require separate validation.
+Media compatibility depends on the playback device and browser. Access to source folders is governed by the Windows permissions of the account running the application or service.

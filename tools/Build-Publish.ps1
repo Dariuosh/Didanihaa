@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$FrameworkDependent, [switch]$NoRestore)
+param([switch]$FrameworkDependent, [switch]$NoRestore, [switch]$ContinuousIntegration)
 $ErrorActionPreference = 'Stop'
 $workspaceRoot = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot 'internal\Launcher.Common.ps1')
@@ -21,6 +21,7 @@ try {
         $arguments = @('publish', $projectPath, '-c', 'Release', '-r', 'win-x64', '--self-contained', $selfContained, '-p:RestoreLockedMode=true',
             '-o', (Join-Path $publishRoot ('apps\' + $application[1])))
         if ($NoRestore) { $arguments += '--no-restore' }
+        if ($ContinuousIntegration) { $arguments += '-p:ContinuousIntegrationBuild=true' }
         dotnet @arguments
         if ($LASTEXITCODE -ne 0) { throw ('Publish failed: ' + $application[0]) }
     }

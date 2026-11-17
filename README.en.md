@@ -20,7 +20,11 @@ Scanning never publishes new files automatically. Changed files return to review
 - Original-file streaming with HTTP Range and HEAD, without transcoding or remuxing.
 - SQLite and configuration beneath the selected portable root; optional Windows Media service.
 
-## Build and run
+## Download and run
+
+Download and extract the Windows x64 ZIP from [Releases](https://github.com/Dariuosh/Didanihaa/releases). Run `tools/Start-Didanihaa.ps1` from the application folder using PowerShell 7. The package needs neither the .NET SDK nor Node.js. See the [portable package guide](tools/Portable-README.md).
+
+## Build from source
 
 Build requirements: Windows x64, PowerShell 7, the [.NET SDK](https://dotnet.microsoft.com/download) specified in [global.json](global.json), and Node.js 22.18+ with npm. The stack is C# 15 / .NET 11, TypeScript, Lit and Vite. The default self-contained published package needs neither the SDK nor Node to run.
 
@@ -79,7 +83,7 @@ The six application projects are under src/, C# tests under tests/, PowerShell o
 
 [Contributing](CONTRIBUTING.md) · [Tool guide](tools/README.md) · [Color tokens](src/Didanihaa.Web/admin/theme.css)
 
-DLNA, Chromecast, transcoding/remuxing, selectable subtitles, scheduled scanning and filesystem watching are not implemented. Real TV remote/codec acceptance and interactive Windows Service/NTFS/reboot validation remain necessary.
+DLNA, Chromecast, transcoding/remuxing, selectable subtitles, scheduled scanning and filesystem watching are not implemented. Codec and playback-control support depend on the device and browser. Windows Service access to media depends on the service account's NTFS permissions.
 
 ## License
 
