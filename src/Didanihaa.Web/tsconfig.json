@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "moduleDetection": "legacy",
+    "lib": ["ES2018", "DOM"],
+    "strict": true,
+    "noEmitOnError": true,
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["admin/**/*.ts", "tv/**/*.ts", "shared/**/*.ts"]
+}

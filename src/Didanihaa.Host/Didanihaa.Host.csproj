@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="../Didanihaa.Infrastructure/Didanihaa.Infrastructure.csproj" />
+    <ProjectReference Include="../Didanihaa.Web/Didanihaa.Web.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+  </ItemGroup>
+</Project>

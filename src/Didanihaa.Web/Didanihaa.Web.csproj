@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Target Name="RestoreFrontend" BeforeTargets="BuildFrontend" Condition="!Exists('node_modules/.package-lock.json')">
+    <Exec Command="npm ci --cache &quot;$(MSBuildProjectDirectory)/../../temp/npm-cache&quot; --prefer-offline --no-audit --no-fund --ignore-scripts"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+  <Target Name="BuildFrontend" BeforeTargets="BeforeBuild" DependsOnTargets="RestoreFrontend">
+    <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+</Project>

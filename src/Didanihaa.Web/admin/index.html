@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>دیدنی‌ها · مدیریت کتابخانه</title><link rel="icon" href="/assets/brand/app-icon.svg" type="image/svg+xml"><link rel="stylesheet" href="/admin/admin.css"><script type="module" src="/admin/admin.ts"></script></head>
+<body>
+  <a class="skip-link" href="#page-title">رفتن به محتوای صفحه</a>
+  <aside class="sidebar">
+    <a class="brand" href="#overview"><span class="brand-mark"><img src="/assets/brand/logomark.svg" alt="" width="36" height="36"></span><span>دیدنی‌ها<small>DIDANIHAA</small></span></a>
+    <div class="sidebar-label">فضای مدیریت</div>
+    <nav aria-label="مدیریت"><a href="#overview" class="nav-link active"><span>◫</span> نمای کلی</a><a href="#sources" class="nav-link"><span>▱</span> پوشه‌های منبع</a><a href="#catalog" class="nav-link"><span>▦</span> بازبینی و انتشار</a><a href="#service" class="nav-link"><span>⏻</span> مدیریت سرویس</a><a href="#settings" class="nav-link"><span>⚙</span> تنظیمات ابزار</a></nav>
+    <div class="sidebar-bottom"><span class="status-dot"></span> مدیریت محلی و مستقل<div class="subtle">کتابخانهٔ تو، در شبکهٔ خودت.</div><span class="version">نسخهٔ آغازین · ۰.۱</span></div>
+  </aside>
+  <main>
+    <header class="topbar"><div><h1 id="page-title" tabindex="-1">کتابخانه</h1><span id="catalog-context" class="subtle">کتابخانهٔ این اجرا</span></div><div class="topbar-actions"><didanihaa-status id="live-state" label="در حال اتصال…"></didanihaa-status><a id="open-tv" class="button" target="_blank" rel="noopener">رفتن به تلویزیون <span>↗</span></a></div></header>
+    <div id="message" class="notice" hidden><span id="message-text" role="status" aria-live="polite"></span><button id="dismiss-message" type="button" class="button">بستن پیام</button></div>
+    <section id="overview">
+      <div class="intro"><div><h2>وضعیت کتابخانه</h2><p>پوشه‌ها، نتیجهٔ اسکن و رسانه‌های آمادهٔ تماشا.</p></div></div>
+      <div class="stats"><didanihaa-stat id="stat-sources" label="پوشه‌های منبع" symbol="▱" value="—"></didanihaa-stat><didanihaa-stat id="stat-candidates" label="رسانه‌های شناسایی‌شده" symbol="▦" value="—"></didanihaa-stat><didanihaa-stat id="stat-published" label="منتشرشده برای تماشا" symbol="▷" value="—"></didanihaa-stat><didanihaa-stat id="stat-unavailable" label="خارج از دسترس" symbol="◷" value="—"></didanihaa-stat></div>
+      <div class="workflow"><span><b>۰۱</b> معرفی پوشه</span><span class="flow-line"></span><span><b>۰۲</b> اسکن و بازبینی</span><span class="flow-line"></span><span><b>۰۳</b> انتخاب و انتشار</span><span class="flow-line"></span><span><b>۰۴</b> تماشا در تلویزیون</span></div>
+      <div class="next-step"><div><span class="subtle">قدم بعدی</span><h2 id="next-step-title">در حال بررسی کتابخانه…</h2><p id="next-step-description"></p></div><a id="next-step-action" class="button accent" href="#sources">معرفی پوشه</a></div>
+    </section>
+    <section id="sources" class="panel">
+      <div class="section-heading"><div><h2>پوشه‌های منبع</h2><p>اسکن فقط فهرست را آماده می‌کند؛ انتخاب آنچه منتشر می‌شود با توست.</p></div><span class="section-number">01 / SOURCES</span></div>
+      <form id="source-form" class="source-form"><label for="source-name">نام پوشه<input id="source-name" maxlength="256" placeholder="مثلاً آرشیو فیلم‌ها"></label><label for="source-path" class="path-field">مسیر پوشه روی این رایانه<input id="source-path" class="mono" required maxlength="4096" placeholder="E:\Media\Movies" autocomplete="off"></label><button type="submit" class="button primary">＋ افزودن و اسکن</button></form>
+      <div id="source-list"></div>
+    </section>
+    <section id="catalog" class="panel">
+      <div class="section-heading"><div><h2 id="catalog-heading" tabindex="-1">کتابخانهٔ تو</h2><p>این صفحه همهٔ فایل‌های شناسایی‌شده را برای بازبینی نشان می‌دهد؛ در TV فقط موارد منتشرشده دیده می‌شوند.</p></div><span class="section-number">02 / LIBRARY</span></div>
+      <nav id="folder-breadcrumbs" class="breadcrumbs" aria-label="مسیر پوشه در کتابخانه"></nav>
+      <div id="folder-grid" class="folder-grid"></div>
+      <div id="folder-heading" class="folder-heading" hidden><div><h3 id="folder-title"></h3><p>فایل‌های همین پوشه با ترتیب شمارهٔ نام پخش می‌شوند؛ زیرپوشه‌ها انتخاب مستقل دارند.</p></div><div class="folder-actions"><a id="preview-folder" class="button" target="_blank" rel="noopener" hidden>مشاهده در TV ↗</a><button id="publish-folder" class="button accent" type="button">انتشار پوشه</button><button id="unpublish-folder" class="button" type="button">لغو انتشار پوشه</button></div></div>
+      <div class="catalog-tools">
+        <label class="search-field" for="search">جست‌وجو<input id="search" type="search" placeholder="نام رسانه…"></label>
+        <label for="source-filter">پوشه<select id="source-filter"><option value="">همهٔ پوشه‌ها</option></select></label>
+        <label for="state-filter">وضعیت<select id="state-filter"><option value="">همهٔ وضعیت‌ها</option><option value="review">نیازمند انتخاب</option><option value="published">منتشرشده</option><option value="unavailable">خارج از دسترس</option></select></label>
+        <label for="kind-filter">نوع<select id="kind-filter"><option value="">همهٔ رسانه‌ها</option><option value="video">ویدیو</option><option value="audio">صوت</option></select></label>
+        <button id="refresh" class="button" type="button">↻ تازه‌سازی</button>
+      </div>
+      <div class="results-summary"><span id="catalog-count" class="subtle" role="status"></span><span id="catalog-loading" class="subtle" hidden>در حال دریافت…</span><button id="clear-filters" class="button" type="button" hidden>پاک‌کردن فیلترها</button></div>
+      <div class="selection-bar"><div class="selection-summary"><span id="selection-count">۰ مورد انتخاب‌شده</span><small id="selection-context">انتخاب همه فقط موارد این صفحه را شامل می‌شود.</small></div><div><button id="clear-selection" class="button" type="button" hidden>لغو انتخاب‌ها</button><button id="publish" class="button accent" type="button" disabled>انتشار انتخاب‌ها</button><button id="unpublish" class="button" type="button" disabled>لغو انتشار</button></div></div>
+      <div id="catalog-results" aria-busy="false">
+        <div id="media-table-region" class="table-scroll" tabindex="0" role="region" aria-labelledby="catalog-heading"><table><caption class="visually-hidden">رسانه‌های شناسایی‌شده و وضعیت انتشار</caption><thead><tr><th scope="col"><input id="select-all" type="checkbox" aria-label="انتخاب موارد این صفحه"></th><th scope="col">رسانه</th><th scope="col">نوع / حجم</th><th scope="col">مدت / کیفیت</th><th scope="col">وضعیت</th></tr></thead><tbody id="media-list"></tbody></table></div>
+        <div id="catalog-empty" class="empty" hidden><div class="empty-symbol" aria-hidden="true">▦</div><strong id="empty-title">کتابخانه از انتخاب‌های تو شروع می‌شود.</strong><div id="empty-description">یک پوشه اضافه کن و بعد از اسکن، فایل‌های دلخواه را منتشر کن.</div><button id="empty-reset" class="button" type="button" hidden>نمایش همهٔ رسانه‌ها</button></div>
+      </div>
+      <footer class="pagination"><button id="next" class="button" type="button">صفحهٔ بعد</button><span id="page-label" class="subtle"></span><button id="previous" class="button" type="button">صفحهٔ قبل</button></footer>
+    </section>
+    <section id="service" class="panel">
+      <div class="section-heading"><div><h2>سرویس پخش</h2><p>این پنل با توقف سرویس پخش، همچنان در دسترس می‌ماند.</p></div><span class="section-number">03 / SERVICE</span></div>
+      <p id="service-mode" class="service-mode" hidden></p>
+      <div class="service-layout"><div><div class="service-title"><span class="service-symbol">⏻</span><div><strong>Didanihaa Media</strong><div id="service-state" class="subtle">در حال بررسی…</div></div></div><div class="service-actions"><button class="button" data-service="install">نصب / ثبت مسیر فعلی</button><button class="button primary" data-service="start">راه‌اندازی</button><button class="button" data-service="restart">شروع مجدد</button><button class="button danger" data-service="stop">توقف</button></div><p class="subtle">عملیات سرویس با پنجرهٔ تأیید دسترسی ویندوز انجام می‌شود.</p></div><div class="runtime-details"><span class="subtle">آدرس تماشا در شبکه</span><div id="viewer-addresses" class="mono"></div><span class="subtle">ریشهٔ قابل انتقال</span><div id="runtime-root" class="mono"></div><span id="metadata-state" class="subtle"></span></div></div>
+    </section>
+    <section id="settings" class="panel">
+      <div class="section-heading"><div><h2>خواندن مشخصات رسانه</h2><p>از ابزار FFprobe همراه FFmpeg برای خواندن مدت، کدک، زبان و وضوح استفاده می‌شود.</p></div><span class="section-number">04 / SETTINGS</span></div>
+      <form id="settings-form" class="source-form"><label for="probe-path" class="path-field">پوشهٔ ابزار یا آدرس ffprobe.exe<input id="probe-path" class="mono" required maxlength="4096" placeholder="D:\Tools\ffmpeg\bin" autocomplete="off"></label><button class="button primary" type="submit">ذخیرهٔ مسیر</button></form>
+      <p class="subtle">برای تصویر بندانگشتی ویدیو، ffmpeg.exe کنار FFprobe قرار می‌گیرد. فقط یک تصویر ثابت ساخته می‌شود؛ پخش همیشه از فایل اصلی است. پس از تغییر ابزار، پوشه‌ها را دوباره اسکن کن تا مشخصات ناقص تکمیل شوند.</p>
+    </section>
+    <section id="profile" class="panel" hidden><div class="section-heading"><div><h2>پروفایل مشترک خانه</h2><p>همهٔ دستگاه‌های شبکه این علاقه‌مندی‌ها و تنظیمات را می‌بینند.</p></div></div><form id="profile-form" class="profile-form"><label for="profile-name">نام پروفایل<input id="profile-name" required maxlength="80"></label><label for="profile-nav-limit">تعداد پوشه‌های زیر هر دسته در منوی TV<input id="profile-nav-limit" type="number" min="1" max="20" step="1" value="5" required><small class="subtle">پیش‌فرض ۵ پوشه؛ فهرست کامل با «نمایش همه» در دسترس است.</small></label><label class="check-label" for="profile-autoplay"><input id="profile-autoplay" type="checkbox"> پخش خودکار فایل بعدی</label><label class="check-label" for="profile-repeat"><input id="profile-repeat" type="checkbox"> تکرار پوشه در پایان پلی‌لیست</label><button class="button accent" type="submit">ذخیرهٔ تنظیمات مشترک</button></form><p id="profile-summary" class="profile-summary"></p></section>
+    <footer class="page-footer">دیدنی‌ها <span>رسانه‌های شخصی، برای لحظه‌های خودت.</span></footer>
+  </main>
+</body></html>

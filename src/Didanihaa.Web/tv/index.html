@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>کتابخانه · دیدنی‌ها</title><link rel="icon" href="/assets/brand/app-icon.svg" type="image/svg+xml"><link rel="stylesheet" href="/tv/tv.css"><link rel="stylesheet" href="/tv/player.css"><!--TV_COMPATIBILITY--><script type="module" src="/tv/tv.ts"></script></head>
+<body>
+  <a class="skip-link" href="#collection-title">رفتن به محتوا</a>
+  <aside id="tv-rail" class="tv-rail"><a class="brand" href="/tv/" data-category="all"><img src="/assets/brand/logomark.svg" alt="" width="40" height="40"><span>دیدنی‌ها</span></a><nav aria-label="کتابخانه"><div class="tv-navigation" role="toolbar" aria-label="بخش‌های کتابخانه" aria-orientation="vertical" data-tv-zone="rail"><a href="/tv/?view=favorites" data-category="favorites"><span aria-hidden="true">♡</span> علاقه‌مندی‌ها <small id="favorites-count"></small></a><a href="/tv/?kind=video" data-category="video"><span aria-hidden="true">▷</span> ویدیوها</a><a href="/tv/?kind=audio" data-category="audio"><span aria-hidden="true">♫</span> صداها</a></div></nav><div class="rail-bottom" role="toolbar" aria-label="نمایش ساده" data-tv-zone="support"><span id="home-profile-name">خانه</span><small>پروفایل مشترک</small><a href="/tv/simple">نسخهٔ سادهٔ TV</a></div></aside>
+  <header id="tv-header" class="tv-header"><div id="library-toolbar" class="library-toolbar" role="toolbar" aria-label="پیمایش کتابخانه" data-tv-zone="header"><button id="go-back" class="button" type="button">بازگشت ↩</button><a class="button" href="/tv/" data-category="all">کتابخانه</a><button id="focus-search" class="button" type="button">جست‌وجو ⌕</button></div><span id="count" class="subtle" role="status"></span></header>
+  <main id="tv-main"><form id="search-form" class="search-form" hidden><label for="search">جست‌وجو در این بخش<input id="search" type="search" autocomplete="off" placeholder="نام رسانه…"></label><button class="button accent" type="submit">جست‌وجو</button><button id="clear-search" class="button" type="button">پاک‌کردن</button></form>
+    <section id="collection" class="collection"><div class="collection-heading"><div><h1 id="collection-title" tabindex="-1">کتابخانه</h1><p id="collection-description"></p></div><div role="toolbar" aria-label="پخش پوشه" data-tv-zone="folder-actions"><button id="play-folder" class="button accent" type="button" hidden>▷ پخش این پوشه</button></div></div>
+    <nav id="folder-breadcrumbs" class="breadcrumbs" aria-label="مسیر پوشه در کتابخانه"></nav><div id="folder-grid" class="folder-grid" data-tv-zone="folders"></div>
+    <div id="error" class="notice error" role="alert" hidden><span id="error-text"></span><button id="retry" class="button" type="button">تلاش دوباره</button></div><div id="grid" class="media-grid" data-tv-zone="media"></div><div id="empty" class="empty" hidden><div class="empty-symbol" aria-hidden="true">♡</div><strong id="empty-title"></strong><div id="empty-description"></div></div>
+    <div id="pagination" class="tv-pagination" role="toolbar" aria-label="صفحه‌های کتابخانه" data-tv-zone="pagination" hidden><button id="next" class="button" type="button">صفحهٔ بعد</button><span id="page-label" class="subtle"></span><button id="previous" class="button" type="button">صفحهٔ قبل</button></div></section><noscript><p class="notice">برای این مرورگر از <a href="/tv/simple">نسخهٔ سادهٔ TV</a> استفاده کن؛ مرور پوشه و پخش به JavaScript وابسته نیست.</p></noscript>
+  </main><footer id="tv-footer">جهت‌ها: پیمایش <b>·</b> OK: انتخاب <b>·</b> Back: بازگشت</footer>
+  <dialog id="player" class="player" aria-labelledby="player-title" hidden>
+    <div id="player-shell" class="player-shell">
+      <header class="player-top player-chrome" role="toolbar" aria-label="پنجرهٔ پخش" data-tv-zone="player-heading"><div><span id="queue-position" class="subtle"></span><h2 id="player-title"></h2></div><button id="close-player" class="button" type="button">بستن ×</button></header>
+      <div class="player-watch">
+        <div class="player-primary">
+          <div id="player-media" class="player-media"></div>
+          <div class="player-details player-chrome">
+            <div id="playlist-toolbar" class="playlist-controls" role="toolbar" aria-label="پلی‌لیست و تنظیمات پخش" data-tv-zone="playlist"><button id="next-track" class="button" type="button">⏭ بعدی</button><button id="previous-track" class="button" type="button">قبلی ⏮</button><button id="favorite-current" class="button" type="button" aria-pressed="false">♡ علاقه‌مندی</button><button id="autoplay-next" class="button" type="button" aria-pressed="true">پخش خودکار بعدی</button><button id="repeat-playlist" class="button" type="button" aria-pressed="false">تکرار پوشه</button></div>
+            <p id="queue-status" class="subtle" role="status"></p><p id="playback-error" class="notice error" role="alert" hidden></p>
+          </div>
+        </div>
+        <aside id="queue-panel" class="queue-panel" aria-labelledby="queue-heading"><div class="queue-heading"><div><h3 id="queue-heading">قسمت‌های این پوشه</h3><span id="queue-count" class="subtle"></span></div><span aria-hidden="true">☷</span></div><div id="queue-list" class="queue-list" data-tv-zone="queue"></div><p id="queue-error" class="subtle" role="status" hidden></p><div id="queue-pagination" class="queue-pagination" role="toolbar" aria-label="صفحه‌های قسمت‌ها" data-tv-zone="queue-pages" hidden><button id="queue-next" class="button" type="button">بعدی</button><span id="queue-page-label" class="subtle"></span><button id="queue-previous" class="button" type="button">قبلی</button></div></aside>
+      </div>
+    </div>
+  </dialog>
+</body></html>

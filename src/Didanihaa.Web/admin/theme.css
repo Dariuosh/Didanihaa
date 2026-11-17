@@ -1,0 +1,106 @@
+/* Canonical admin palette. See docs/design/COLORS.md; TV has a separate compatibility palette. */
+:root {
+  color-scheme: dark;
+  --ink-light: oklch(29% .025 248);
+  --ink-dark: oklch(96% 0 0);
+  --muted-light: oklch(46% .022 245);
+  --muted-dark: oklch(78% 0 0);
+  --paper-light: oklch(97.2949% .002870 264.542);
+  --paper-dark: oklch(16.8416% 0 0);
+  --surface-light: oklch(100% 0 0);
+  --surface-dark: oklch(25% 0 0);
+  --raised-light: oklch(98% .004 250);
+  --raised-dark: oklch(31% 0 0);
+  --line-light: oklch(89% .009 250);
+  --line-dark: oklch(37.5299% 0 0);
+  --control-border-light: oklch(55% .025 248);
+  --control-border-dark: oklch(61.6707% 0 0);
+  --accent-light: oklch(51.3972% .195139 259.003);
+  --accent-dark: oklch(70.6708% .160883 248.385);
+  --accent-hover: oklch(81.1319% .100850 246.207);
+  --brand: oklch(63.0669% .254872 23.614);
+  --focus: oklch(81.1319% .100850 246.207);
+  --navy: oklch(20.9036% 0 0);
+  --nav-current: oklch(100% 0 0 / .07059);
+  --nav-hover: oklch(100% 0 0 / .10980);
+  --folder-start: oklch(35.2325% 0 0);
+  --folder-end: oklch(26.0325% 0 0);
+  --stat-neutral: oklch(82.6562% 0 0);
+  --stat-info: var(--focus);
+  --stat-published: oklch(77.5950% .136672 7.621);
+  --ink: var(--ink-dark);
+  --muted: var(--muted-dark);
+  --paper: var(--paper-dark);
+  --surface: var(--surface-dark);
+  --raised: var(--raised-dark);
+  --line: var(--line-dark);
+  --control-border: var(--control-border-dark);
+  --accent: var(--accent-dark);
+  --on-accent: var(--paper-dark);
+  --status-good-ink: var(--jade-300);
+  --status-good-bg: color-mix(in oklab, var(--jade-800) 40%, var(--surface));
+  --status-warning-ink: var(--amber-300);
+  --status-warning-bg: color-mix(in oklab, var(--amber-800) 35%, var(--surface));
+  --status-error-ink: var(--coral-300);
+  --status-error-bg: color-mix(in oklab, var(--coral-800) 35%, var(--surface));
+  accent-color: var(--accent);
+}
+/* Explicit dark values above remain usable without light-dark(). */
+@supports (color: light-dark(white, black)) {
+  :root {
+    --ink: light-dark(var(--ink-light), var(--ink-dark));
+    --muted: light-dark(var(--muted-light), var(--muted-dark));
+    --paper: light-dark(var(--paper-light), var(--paper-dark));
+    --surface: light-dark(var(--surface-light), var(--surface-dark));
+    --raised: light-dark(var(--raised-light), var(--raised-dark));
+    --line: light-dark(var(--line-light), var(--line-dark));
+    --control-border: light-dark(var(--control-border-light), var(--control-border-dark));
+    --accent: light-dark(var(--accent-light), var(--accent-dark));
+    --status-good-ink: light-dark(var(--jade-700), var(--jade-300));
+    --status-good-bg: light-dark(var(--jade-100), color-mix(in oklab, var(--jade-800) 40%, var(--surface)));
+    --status-warning-ink: light-dark(var(--amber-700), var(--amber-300));
+    --status-warning-bg: light-dark(var(--amber-100), color-mix(in oklab, var(--amber-800) 35%, var(--surface)));
+    --status-error-ink: light-dark(var(--coral-700), var(--coral-300));
+    --status-error-bg: light-dark(var(--coral-100), color-mix(in oklab, var(--coral-800) 35%, var(--surface)));
+  }
+}
+body { background: var(--paper); color: var(--ink); }
+.sidebar { border-left: 1px solid var(--line); }
+.panel { background: var(--surface); box-shadow: 0 8px 35px oklch(10% .01 250 / .13); container-type: inline-size; }
+.source-form, .runtime-details { background: color-mix(in oklab, var(--paper) 65%, var(--surface)); }
+input:not([type=checkbox]), select { background: var(--paper); border-color: var(--control-border); color: var(--ink); }
+input::placeholder { color: var(--muted); }
+.source-form label, .source-path, .job-description, .media-details, .media-path, .workflow,
+.catalog-tools .subtle, .section-number, th, .page-footer, .version, .sidebar-label { color: var(--muted); }
+.brand-mark { color: var(--accent); border-color: var(--accent); }
+.button { background: var(--raised); border-color: var(--control-border); color: var(--ink); }
+.button:hover { background: color-mix(in oklab, var(--raised) 85%, var(--accent)); }
+.button.primary, .button.accent { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.button.primary:hover, .button.accent:hover { background: var(--accent-hover); }
+.button.danger { color: var(--coral-300); }
+.selection-bar { background: var(--status-warning-bg); border-color: var(--line); color: var(--status-warning-ink); }
+.badge.good { color: var(--status-good-ink); background: var(--status-good-bg); }
+.badge.warn { color: var(--status-warning-ink); background: var(--status-warning-bg); }
+.badge.bad { color: var(--status-error-ink); background: var(--status-error-bg); }
+.source-row, td, th { border-color: var(--line); }
+.media-icon { background: var(--status-warning-bg); color: var(--accent); }
+.service-symbol { color: var(--accent); }
+.notice { background: var(--status-warning-bg); color: var(--status-warning-ink); border: 1px solid var(--control-border); }
+.notice.error { background: var(--status-error-bg); color: var(--status-error-ink); }
+.flow-line { background: var(--line); }
+.runtime-details .mono { white-space: pre-line; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline-color: var(--focus); }
+::selection { color: var(--on-accent); background: var(--accent-hover); }
+
+@container (max-width: 520px) {
+  .source-form { flex-wrap: wrap; }
+  .source-form label, .source-form .path-field { flex-basis: 100%; }
+  .source-form button { width: 100%; }
+}
+
+@media (forced-colors: active) {
+  :root { --ink: CanvasText; --muted: CanvasText; --paper: Canvas; --surface: Canvas; --raised: ButtonFace; --line: ButtonText; --control-border: ButtonText; --accent: Highlight; --navy: Canvas; --status-good-ink: CanvasText; --status-good-bg: Canvas; --status-warning-ink: CanvasText; --status-warning-bg: Canvas; --status-error-ink: CanvasText; --status-error-bg: Canvas; }
+  .button, .badge, .media-icon, .brand-mark { border: 1px solid ButtonText; }
+  .button.primary, .button.accent { color: HighlightText; background: Highlight; }
+  .panel { box-shadow: none; }
+}

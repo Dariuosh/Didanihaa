@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a reproducible problem without sharing private media or local data.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a security vulnerability, follow SECURITY.md instead of posting details here.
+        Remove personal file names, paths, IPs, tokens and catalog contents from attachments.
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce with sample data
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Version and environment
+      description: Commit/version, Windows version, browser or TV model, and development/published mode. No physical media paths are needed.
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Sanitized diagnostic details
+      description: Include only the relevant error text and non-personal reproduction details.

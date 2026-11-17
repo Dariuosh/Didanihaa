@@ -1,0 +1,41 @@
+/*
+  Generated via Harmonizer: https://harmonizer.evilmartians.com/#hZLNTgMhFIXf5bolBoYyP-y0rozGRd0ZF3R6h5lIoWGwm2be3VBty9Ckbs_hO4d74QB79OPgLEhGwOAezQjy4wBWbREkMEqBQOts8GoMIBmlBNreu60CSe8p45wV4iQt1e5XrSdyjiiyiGaewIuc5kVC84yuqhktrrqFSOhFRpdiRtc5nN5bZKxgKcsylCVkebu1yVubhK1uz1vlbJWw9e1NX68qYZt_HppfvdL0SaD_xtl3WTqvDBBQVhsEWaQND9s1-otX8cR7Vhu8WKxMvbcWlU0yF3VsHjGEweoR5OF861e3QQMS1K5VQGAzeGzD4GzUQUKn392jhtMgfyruMaav9dIZ518G3QeQcNeJruzqi_Gk_FfUGWN1QY_68ewqKB8_R9ydcX61U21MHb1ewzT9AA
+*/
+:root {
+  --coral-100: oklch(97.1052% 0.014119 22.761);
+  --coral-200: oklch(92.5498% 0.031548 27.417);
+  --coral-300: oklch(86.4147% 0.055520 25.191);
+  --coral-400: oklch(80.2610% 0.080078 25.693);
+  --coral-500: oklch(72.4769% 0.100027 25.183);
+  --coral-600: oklch(58.2201% 0.090073 24.638);
+  --coral-700: oklch(48.6200% 0.070961 24.745);
+  --coral-800: oklch(35.7980% 0.050115 25.328);
+  --coral-900: oklch(17.0987% 0.030156 24.366);
+  --amber-100: oklch(96.9338% 0.013563 78.264);
+  --amber-200: oklch(92.3349% 0.031872 73.520);
+  --amber-300: oklch(85.9076% 0.055553 74.128);
+  --amber-400: oklch(79.6955% 0.080297 72.481);
+  --amber-500: oklch(71.7824% 0.100624 73.404);
+  --amber-600: oklch(57.6156% 0.090223 72.182);
+  --amber-700: oklch(48.0071% 0.070285 72.487);
+  --amber-800: oklch(35.7673% 0.050644 71.934);
+  --amber-900: oklch(17.0923% 0.030839 70.618);
+  --jade-100: oklch(96.9248% 0.014037 162.478);
+  --jade-200: oklch(91.8109% 0.031625 163.203);
+  --jade-300: oklch(85.0971% 0.055223 163.309);
+  --jade-400: oklch(78.3880% 0.079266 162.876);
+  --jade-500: oklch(69.9809% 0.100439 162.701);
+  --jade-600: oklch(56.0534% 0.089103 163.552);
+  --jade-700: oklch(46.9608% 0.069436 163.796);
+  --jade-800: oklch(34.7697% 0.049042 164.001);
+  --jade-900: oklch(16.3852% 0.029260 165.531);
+  --ocean-100: oklch(96.9154% 0.012681 244.252);
+  --ocean-200: oklch(92.2388% 0.031852 246.704);
+  --ocean-300: oklch(85.6804% 0.055186 247.634);
+  --ocean-400: oklch(79.1954% 0.080219 248.873);
+  --ocean-500: oklch(71.0501% 0.099511 248.098);
+  --ocean-600: oklch(57.1379% 0.090984 248.273);
+  --ocean-700: oklch(47.7392% 0.070471 248.841);
+  --ocean-800: oklch(35.5063% 0.050203 248.396);
+  --ocean-900: oklch(16.9137% 0.030671 250.047);
+}

@@ -1,0 +1,20 @@
+{
+  "name": "didanihaa-web",
+  "version": "0.1.0",
+  "license": "MIT",
+  "private": true,
+  "engines": { "node": ">=22.18.0" },
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --project tsconfig.json --noEmit && vite build && node build/copy-static.mjs",
+    "check": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "lit": "3.3.3"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "vite": "8.3.8"
+  }
+}
