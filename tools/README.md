@@ -56,4 +56,4 @@ Test-Publication.ps1 فایل‌های قابل ثبت فعلی و با -Revisio
 .\tools\Build-Release.ps1
 ```
 
-این فرمان تغییرات سورسِ ثبت‌نشده را نمی‌پذیرد، commit عمومی انتخاب‌شده را جداگانه دریافت می‌کند و خروجی ZIP و SHA256SUMS را در temp/releases/artifacts می‌گذارد. publish و دادهٔ فعال پروژه دست‌نخورده می‌مانند. گزینه‌های -Revision و -OutputDirectory برای انتخاب commit و مقصد خروجی‌اند؛ مقصد نباید خروجی نسخهٔ قبلی داشته باشد. راهنمای داخل بسته از [Portable-README.md](Portable-README.md) تهیه می‌شود. این فرمان tag یا Release گیت‌هاب ایجاد نمی‌کند.
+این فرمان تغییرات سورسِ ثبت‌نشده را نمی‌پذیرد، commit عمومی انتخاب‌شده را در مسیر ثابت temp/releases/work/source دریافت می‌کند و خروجی ZIP و SHA256SUMS را در temp/releases/artifacts می‌گذارد. فضای ساخت موقت در اجرای بعدی بازسازی و با قفل از ساخت هم‌زمان محافظت می‌شود. publish و دادهٔ فعال پروژه دست‌نخورده می‌مانند. گزینه‌های -Revision و -OutputDirectory برای انتخاب commit و مقصد خروجی‌اند؛ مقصد نباید خروجی نسخهٔ قبلی داشته باشد. راهنمای داخل بسته از [Portable-README.md](Portable-README.md) تهیه می‌شود. این فرمان برنامه، tag یا Release گیت‌هاب را اجرا/ایجاد نمی‌کند.

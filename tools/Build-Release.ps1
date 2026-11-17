@@ -3,6 +3,7 @@ param([string]$Revision = 'HEAD', [string]$OutputDirectory = 'temp/releases/arti
 $ErrorActionPreference = 'Stop'
 $workspaceRoot = Split-Path -Parent $PSScriptRoot
 $previousPackages = $env:NUGET_PACKAGES
+$buildLock = $null
 
 function Invoke-ReleaseGit {
     param([string[]]$GitArguments)
@@ -20,6 +21,30 @@ function Copy-ReleaseDirectory {
         [IO.Directory]::CreateDirectory((Split-Path -Parent $target)) | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $target
     }
+}
+function Reset-ReleaseWorkspaceDirectory {
+    param([string]$Directory, [string]$WorkRoot)
+    $target = [IO.Path]::GetFullPath($Directory)
+    $allowedRoot = [IO.Path]::GetFullPath($WorkRoot).TrimEnd('\') + '\'
+    if (-not $target.StartsWith($allowedRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Release cleanup target is outside its workspace.' }
+    $relative = [IO.Path]::GetRelativePath($workspaceRoot, $target)
+    if ($relative.StartsWith('..') -or [IO.Path]::IsPathRooted($relative)) { throw 'Release cleanup target is outside the repository.' }
+    $current = $workspaceRoot
+    foreach ($part in ($relative -split '[\\/]')) {
+        $current = Join-Path $current $part
+        if ((Test-Path -LiteralPath $current) -and ((Get-Item -LiteralPath $current -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw 'Release cleanup refuses a reparse point.'
+        }
+    }
+    $running = @(Get-Process -Name 'Didanihaa.Control','Didanihaa.Host' -ErrorAction SilentlyContinue | Where-Object {
+        try { $_.Path.StartsWith($target + '\', [StringComparison]::OrdinalIgnoreCase) } catch { $false }
+    })
+    if ($running.Count) { throw 'The fixed release workspace has a running application; stop it before building.' }
+    if (Test-Path -LiteralPath $target) {
+        $links = @(Get-ChildItem -LiteralPath $target -Recurse -Force | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint })
+        if ($links.Count) { throw 'Release cleanup refuses nested reparse points.' }
+    }
+    if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Recurse -Force }
 }
 
 Push-Location -LiteralPath $workspaceRoot
@@ -44,9 +69,25 @@ try {
     $archivePath = Join-Path $outputRoot ($packageName + '.zip')
     $checksumPath = Join-Path $outputRoot 'SHA256SUMS'
     if ((Test-Path -LiteralPath $archivePath) -or (Test-Path -LiteralPath $checksumPath)) { throw 'Release output already exists; choose an empty output directory.' }
-    $workRoot = Join-Path $workspaceRoot ('temp/releases/work/' + [guid]::NewGuid().ToString('N'))
+    $releaseRoot = Join-Path $workspaceRoot 'temp/releases'
+    foreach ($ancestor in @($workspaceRoot, (Join-Path $workspaceRoot 'temp'), $releaseRoot, (Join-Path $releaseRoot 'work'))) {
+        if ((Test-Path -LiteralPath $ancestor) -and ((Get-Item -LiteralPath $ancestor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Release workspace refuses a reparse point.' }
+    }
+    [IO.Directory]::CreateDirectory($releaseRoot) | Out-Null
+    try { $buildLock = [IO.File]::Open((Join-Path $releaseRoot 'build.lock'), 'OpenOrCreate', 'ReadWrite', 'None') }
+    catch { throw 'Another release build is using the fixed workspace.' }
+    $workRoot = Join-Path $releaseRoot 'work'
     $sourceRoot = Join-Path $workRoot 'source'
-    $stageRoot = Join-Path $workRoot $packageName
+    $packageRoot = Join-Path $workRoot 'package'
+    $stageRoot = Join-Path $packageRoot $packageName
+    $markerPath = Join-Path $workRoot '.didanihaa-release-workspace'
+    if (-not (Test-Path -LiteralPath $markerPath)) {
+        if ((Test-Path -LiteralPath $sourceRoot) -or (Test-Path -LiteralPath $packageRoot)) { throw 'An unrecognized release workspace already exists.' }
+        [IO.Directory]::CreateDirectory($workRoot) | Out-Null
+        [IO.File]::WriteAllText($markerPath, 'Didanihaa release workspace v1')
+    } elseif (([IO.File]::ReadAllText($markerPath)) -ne 'Didanihaa release workspace v1') { throw 'Release workspace ownership marker differs.' }
+    Reset-ReleaseWorkspaceDirectory -Directory $sourceRoot -WorkRoot $workRoot
+    Reset-ReleaseWorkspaceDirectory -Directory $packageRoot -WorkRoot $workRoot
     [IO.Directory]::CreateDirectory($workRoot) | Out-Null
     [IO.Directory]::CreateDirectory($stageRoot) | Out-Null
     Invoke-ReleaseGit -GitArguments @('init', '--quiet', $sourceRoot) | Out-Null
@@ -97,6 +138,7 @@ try {
     Write-Output ('Checksum: ' + $checksumPath)
     Write-Output ('Source commit: ' + $commit)
 } finally {
+    if ($null -ne $buildLock) { $buildLock.Dispose() }
     $env:NUGET_PACKAGES = $previousPackages
     Pop-Location
 }
