@@ -57,7 +57,7 @@ function Start-DevelopmentProcess {
     $stderr = Join-Path $logDirectory ($Role + '.err.log')
     $startedProcess = Start-Process -FilePath $Executable -ArgumentList $Arguments -WorkingDirectory $WorkingDirectory -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     $startedProcess.Refresh()
-    $tracked.Add([PSCustomObject]@{ role = $Role; id = $startedProcess.Id; executable = $startedProcess.Path; startedUtc = $startedProcess.StartTime.ToUniversalTime().ToString('O') })
+    $tracked.Add([PSCustomObject]@{ role = $Role; id = $startedProcess.Id; executable = [IO.Path]::GetFullPath($Executable); startedUtc = $startedProcess.StartTime.ToUniversalTime().ToString('O') })
     Save-DevelopmentState -Root $workspaceRoot -Processes $tracked.ToArray()
     return $startedProcess
 }

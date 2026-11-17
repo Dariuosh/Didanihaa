@@ -27,7 +27,7 @@ function Start-PublishedProcess {
     param([string]$Role, [string]$Executable, [string]$ReadyUrl)
     $process = Start-Process -FilePath $Executable -ArgumentList @('--root', ('"{0}"' -f $runtimeRoot)) -WorkingDirectory $runtimeRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $logDirectory ($Role + '.out.log')) -RedirectStandardError (Join-Path $logDirectory ($Role + '.err.log'))
     $process.Refresh()
-    $tracked.Add([PSCustomObject]@{ role = $Role; id = $process.Id; executable = $process.Path; startedUtc = $process.StartTime.ToUniversalTime().ToString('O') })
+    $tracked.Add([PSCustomObject]@{ role = $Role; id = $process.Id; executable = [IO.Path]::GetFullPath($Executable); startedUtc = $process.StartTime.ToUniversalTime().ToString('O') })
     Save-DevelopmentState -Root $runtimeRoot -Processes $tracked.ToArray()
     $deadline = [DateTime]::UtcNow.AddSeconds(40)
     do {
