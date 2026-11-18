@@ -41,7 +41,7 @@ public sealed class WindowsServiceManager(RuntimeLayout layout)
                 return new(true, true, status.CurrentState switch
                 {
                     1 => "stopped", 2 => "starting", 3 => "stopping", 4 => "running", 7 => "paused", _ => "pending"
-                }, executable);
+                }, executable, MatchesInstallation(executable, layout));
             }
             finally { CloseServiceHandle(service); }
         }
@@ -52,8 +52,10 @@ public sealed class WindowsServiceManager(RuntimeLayout layout)
     {
         if (!Actions.Contains(action)) throw new ArgumentException("عملیات سرویس معتبر نیست.");
         if (!OperatingSystem.IsWindows()) return new(false, "مدیریت Windows Service فقط در ویندوز قابل استفاده است.");
+        if (ReadState() is { Installed: true, Owned: false })
+            return new(false, "سرویس ثبت‌شده متعلق به این پوشه نیست یا مالکیت آن مشخص نیست؛ عملیات انجام نشد.");
         if (action == "install" && !File.Exists(layout.HostExecutable))
-            return new(false, "ابتدا scripts/Publish.ps1 را اجرا کنید؛ فایل اجرایی سرویس هنوز ساخته نشده است.");
+            return new(false, "ابتدا tools/Build-Publish.ps1 را اجرا کنید؛ فایل اجرایی سرویس هنوز ساخته نشده است.");
         Directory.CreateDirectory(layout.TempPath);
         var resultPath = Path.Combine(layout.TempPath, $"service-{Guid.NewGuid():N}.json");
         var executable = Environment.ProcessPath ?? throw new InvalidOperationException("آدرس برنامه پیدا نشد.");
@@ -85,6 +87,8 @@ public sealed class WindowsServiceManager(RuntimeLayout layout)
         try
         {
             if (!OperatingSystem.IsWindows()) throw new InvalidOperationException("این عملیات به ویندوز نیاز دارد.");
+            if (ReadState() is { Installed: true, Owned: false })
+                throw new InvalidOperationException("سرویس ثبت‌شده متعلق به این پوشه نیست یا مالکیت آن مشخص نیست؛ عملیات انجام نشد.");
             if (action == "install")
             {
                 if (!File.Exists(layout.HostExecutable)) throw new FileNotFoundException("خروجی publish سرویس پیدا نشد.");
@@ -93,6 +97,11 @@ public sealed class WindowsServiceManager(RuntimeLayout layout)
                 // Only the application root is granted read/execute; external media ACLs remain explicit.
                 await RunCommandAsync(Path.Combine(Environment.SystemDirectory, "icacls.exe"),
                     [layout.Root, "/grant", "*S-1-5-19:(OI)(CI)RX"]);
+                var statePath = RuntimeSettings.StatePath(layout.Root);
+                PathSafety.RejectExistingReparsePoints(statePath);
+                Directory.CreateDirectory(statePath);
+                await RunCommandAsync(Path.Combine(Environment.SystemDirectory, "icacls.exe"),
+                    [statePath, "/grant", "*S-1-5-19:(OI)(CI)M"]);
                 var command = ReadState().Installed ? "config" : "create";
                 await ScAsync([command, ServiceName, "binPath=", $"{Quote(layout.HostExecutable)} --root {Quote(layout.Root)}",
                     "start=", "delayed-auto", "obj=", "NT AUTHORITY\\LocalService", "DisplayName=", "Didanihaa Media"]);
@@ -132,6 +141,8 @@ public sealed class WindowsServiceManager(RuntimeLayout layout)
     }
 
     private static Task ScAsync(string[] arguments) => RunCommandAsync(Path.Combine(Environment.SystemDirectory, "sc.exe"), arguments);
+    public static bool MatchesInstallation(string? command, RuntimeLayout layout) =>
+        string.Equals(command, $"{Quote(layout.HostExecutable)} --root {Quote(layout.Root)}", StringComparison.OrdinalIgnoreCase);
     private static async Task RunCommandAsync(string executable, string[] arguments)
     {
         using var process = new Process { StartInfo = new(executable)
