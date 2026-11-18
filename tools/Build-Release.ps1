@@ -111,6 +111,9 @@ try {
         & ./tools/Build-Publish.ps1 -ContinuousIntegration
     } finally { Pop-Location }
     $publishedRoot = Join-Path $sourceRoot 'publish'
+    if (Test-Path -LiteralPath (Join-Path $sourceRoot 'src/Didanihaa.Launcher/Didanihaa.Launcher.csproj')) {
+        Copy-Item -LiteralPath (Join-Path $publishedRoot 'Didanihaa.exe') -Destination $stageRoot
+    }
     foreach ($directory in @('apps', 'web', 'tools', 'third-party')) {
         Copy-ReleaseDirectory -Source (Join-Path $publishedRoot $directory) -Destination (Join-Path $stageRoot $directory)
     }

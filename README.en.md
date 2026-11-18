@@ -22,7 +22,7 @@ Scanning never publishes new files automatically. Changed files return to review
 
 ## Download and run
 
-Download and extract the Windows x64 ZIP from [Releases](https://github.com/Dariuosh/Didanihaa/releases). Run `tools/Start-Didanihaa.ps1` from the application folder using PowerShell 7. The package needs neither the .NET SDK nor Node.js. See the [portable package guide](tools/Portable-README.md).
+Extract the Windows x64 ZIP from [Releases](https://github.com/Dariuosh/Didanihaa/releases) to a writable folder and open `Didanihaa.exe`. The v0.1.0 ZIP starts through `tools/Start-Didanihaa.ps1` with PowerShell 7. See the [portable package guide](tools/Portable-README.md).
 
 ## Build from source
 
@@ -79,7 +79,7 @@ Local settings, catalogs, media, logs, caches and published output are excluded 
 
 ## Project layout and contribution
 
-The six application projects are under src/, C# tests under tests/, PowerShell operations under tools/ and dependency license texts under docs/licenses/.
+Application projects are under src/, C# tests under tests/, PowerShell operations under tools/ and dependency license texts under docs/licenses/.
 
 [Contributing](CONTRIBUTING.md) · [Tool guide](tools/README.md) · [Color tokens](src/Didanihaa.WebUI/admin/theme.css)
 

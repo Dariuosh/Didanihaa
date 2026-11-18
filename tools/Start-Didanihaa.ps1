@@ -11,8 +11,8 @@ $adminPage = Join-Path $runtimeRoot 'web\admin\index.html'
 foreach ($requiredFile in @($controlExecutable, $mediaExecutable, $adminPage)) {
     if (-not (Test-Path -LiteralPath $requiredFile)) { throw ('Published file is missing: ' + $requiredFile + '. Build-publish the application first.') }
 }
-$controlUrl = 'http://localhost:{0}' -f $configuration.publicPort
-$mediaUrl = 'http://localhost:{0}' -f $configuration.mediaPort
+$controlUrl = 'http://127.0.0.1:{0}' -f $configuration.publicPort
+$mediaUrl = 'http://127.0.0.1:{0}' -f $configuration.mediaPort
 $logDirectory = Get-LauncherDirectory -Root $runtimeRoot -Mode Runtime
 New-Item -ItemType Directory -Force -Path $logDirectory | Out-Null
 $tracked = [Collections.Generic.List[object]]::new()
@@ -78,5 +78,5 @@ try {
     Write-Output ('Local dashboard: ' + $controlUrl + '/admin/')
     Write-Output ('Logs: ' + $logDirectory)
     Write-Output 'This command runs the existing published output; it does not build or install a Windows Service.'
-    if (-not $NoBrowser) { Open-DefaultBrowser -Uri ($siteUrl + '/admin/') }
+    if (-not $NoBrowser) { Open-DefaultBrowser -Uri ($controlUrl + '/admin/') }
 } finally { if ($null -ne $startupLock) { $startupLock.Dispose() } }

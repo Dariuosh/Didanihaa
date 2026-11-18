@@ -1,14 +1,10 @@
 # دیدنی‌ها — بستهٔ قابل حمل ویندوز
 
-پیش‌نیاز اجرا: Windows x64 و PowerShell 7. بسته مستقل است؛ نصب .NET SDK یا Node.js برای اجرا لازم نیست.
+بستهٔ مستقل برای Windows x64 آماده شده است. برای شروع، فایل اجرایی موجود در ریشهٔ بسته را باز کنید.
 
 ## شروع
 
-ZIP را در پوشه‌ای با دسترسی نوشتن استخراج کنید. PowerShell را در پوشهٔ برنامه باز کنید:
-
-```powershell
-.\tools\Start-Didanihaa.ps1
-```
+ZIP را در پوشه‌ای با دسترسی نوشتن استخراج کنید. روی `Didanihaa.exe` دوبارکلیک کنید. Control و Media پس از بررسی پورت‌ها شروع می‌شوند و داشبورد روی `127.0.0.1` در مرورگر پیش‌فرض باز می‌شود.
 
 ادمین در مرورگر پیش‌فرض باز می‌شود. در اولین اجرا didanihaa.json از نمونه ساخته می‌شود؛ تنظیمات موجود بازنویسی نمی‌شوند.
 
@@ -16,11 +12,7 @@ ZIP را در پوشه‌ای با دسترسی نوشتن استخراج کنی
 
 پاسخ سرویس باید با هویت همین پوشه مطابقت داشته باشد؛ نسخهٔ قدیمی یا سرویسِ پوشهٔ دیگر خودکار بازاستفاده نمی‌شود. پیش از جایگزینی فایل‌های برنامه، نسخهٔ در حال اجرا را با Stop متوقف کنید. خطای تنظیمات، فایل اصلی را بازنویسی نمی‌کند؛ در نبود فایل محلی، نمونهٔ معتبر یک بار کپی می‌شود.
 
-اگر اجرای اسکریپت با Execution Policy مسدود شد، آن را فقط در یک فرایند PowerShell اجرا کنید:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\tools\Start-Didanihaa.ps1
-```
+شروع خط فرمان با PowerShell 7 از طریق `tools/Start-Didanihaa.ps1` نیز در دسترس است.
 
 برای کنترل دریافت فایل، SHA256 آرشیو را با SHA256SUMS همراه نسخه مقایسه کنید.
 
@@ -54,4 +46,4 @@ install مجوز خواندن/اجرا برای ریشه و نوشتن محدو�
 
 ## English quick start
 
-Requires Windows x64 and PowerShell 7; no .NET SDK or Node.js installation is needed. Extract the ZIP into a writable folder and run `tools/Start-Didanihaa.ps1`. Review and explicitly publish media in administration, then open `http://<LAN-IP>:13521/` on a trusted LAN device. Use `tools/Stop-Didanihaa.ps1` before updates. Stop a registered Media service through the dashboard first. Back up and preserve `data/` and `didanihaa.json` when extracting a newer package over the same folder. Service installation and firewall setup are separate optional operations.
+Extract the Windows x64 ZIP into a writable folder and double-click `Didanihaa.exe`. Review and explicitly publish media in administration, then open `http://<LAN-IP>:13521/` on a trusted LAN device. Before updates, stop a registered Media service through the dashboard, then run `tools/Stop-Didanihaa.ps1` in PowerShell 7. Preserve `data/` and `didanihaa.json` when replacing application files. Service installation and firewall setup are optional operations.

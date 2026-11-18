@@ -22,7 +22,7 @@
 
 ## دریافت نسخهٔ آماده
 
-بستهٔ Windows x64 را از [Releases](https://github.com/Dariuosh/Didanihaa/releases) دریافت و استخراج کنید. با PowerShell 7 از پوشهٔ برنامه، `.\tools\Start-Didanihaa.ps1` را اجرا کنید؛ SDK و Node.js برای اجرای بسته لازم نیستند. [راهنمای بستهٔ قابل حمل](tools/Portable-README.md) نصب و به‌روزرسانی را توضیح می‌دهد.
+بستهٔ Windows x64 را از [Releases](https://github.com/Dariuosh/Didanihaa/releases) در پوشه‌ای قابل نوشتن استخراج کنید و `Didanihaa.exe` را باز کنید. در بستهٔ v0.1.0، شروع از `tools/Start-Didanihaa.ps1` با PowerShell 7 انجام می‌شود. [راهنمای بستهٔ قابل حمل](tools/Portable-README.md) راه‌اندازی و به‌روزرسانی را توضیح می‌دهد.
 
 ## ساخت از سورس
 
@@ -97,6 +97,7 @@ Vite فقط روی `127.0.0.1:5211` است و به gateway روی `13521` پرا
 | `src/Didanihaa.Infrastructure` | SQLite، اسکن، metadata و thumbnail |
 | `src/Didanihaa.Control` | gateway شبکه، مدیریت و نوشتن کاتالوگ |
 | `src/Didanihaa.Media` | Media داخلی و streaming فایل منتشرشده |
+| `src/Didanihaa.Launcher` | ورودی ویندوز برای بررسی بسته، شروع دو بخش و بازکردن داشبورد |
 | `src/Didanihaa.Platform.Windows` | Windows SCM و helper محدود UAC |
 | `src/Didanihaa.WebUI` | رابط مستقل admin و TV |
 | `tests/Didanihaa.Tests` | آزمون‌های C# |
