@@ -24,7 +24,8 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = []
 builder.WebHost.ConfigureKestrel(options => { options.AddServerHeader = false; options.ListenAnyIP(layout.Configuration.PublicPort); });
 builder.Services.AddSingleton(layout);
 builder.Services.AddSingleton(repository);
-builder.Services.AddSingleton<MetadataProbe>();
+builder.Services.AddSingleton<MediaToolCatalog>();
+builder.Services.AddSingleton(services => new MetadataProbe(services.GetRequiredService<MediaToolCatalog>()));
 builder.Services.AddSingleton<ThumbnailService>();
 builder.Services.AddSingleton<LibraryScanner>();
 builder.Services.AddHostedService<ScanWorker>();
@@ -105,16 +106,18 @@ app.MapGet("/thumbnails/{id}", async (string id, HttpContext context, ThumbnailS
     await Thumbnail(id, true, context, thumbnails));
 management.MapGet("/thumbnails/{id}", async (string id, HttpContext context, ThumbnailService thumbnails) =>
     await Thumbnail(id, false, context, thumbnails));
-management.MapGet("/session", (MetadataProbe probe) => Results.Ok(new { token, root = layout.Root, metadataAvailable = probe.IsAvailable,
+management.MapGet("/session", () => Results.Ok(new { token, root = layout.Root,
     publicPort = layout.Configuration.PublicPort, viewerUrls = LanAccess.ViewerUrls(layout.Configuration.PublicPort), runtime = instance.Identity }));
-management.MapGet("/settings", (MetadataProbe probe, ThumbnailService thumbnails) => Results.Ok(new
-{ ffprobePath = layout.Configuration.FfprobePath, metadataAvailable = probe.IsAvailable, thumbnailsAvailable = thumbnails.IsAvailable }));
-management.MapPost("/settings", (ProbeSettingsRequest request, MetadataProbe probe) =>
+management.MapGet("/settings", ToolSettings);
+management.MapPost("/settings", async (ProbeSettingsRequest request, HttpContext context, MediaToolCatalog tools) =>
 {
+    if (!CanConfigureTools(context))
+        return Results.Json(new { error = "برای تغییر مسیر ابزار، داشبورد را روی دستگاه میزبان با آدرس localhost باز کن." }, statusCode: 403);
+    if (request.FfprobePath is null) return Results.BadRequest(new { error = "مقدار مسیر ابزار در درخواست مشخص نشده است." });
     try
     {
         layout.SaveProbePath(request.FfprobePath);
-        return Results.Ok(new { ffprobePath = layout.Configuration.FfprobePath, metadataAvailable = probe.IsAvailable });
+        return await ToolSettings(context, tools);
     }
     catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
 });
@@ -171,6 +174,25 @@ return 0;
 
 static string? EmptyToNull(string? value) => string.IsNullOrEmpty(value) ? null : value;
 
+static bool CanConfigureTools(HttpContext context) =>
+    context.Connection.RemoteIpAddress is { } remote && IPAddress.IsLoopback(remote.IsIPv4MappedToIPv6 ? remote.MapToIPv4() : remote)
+    && context.Connection.LocalIpAddress is { } local && IPAddress.IsLoopback(local.IsIPv4MappedToIPv6 ? local.MapToIPv4() : local);
+
+async Task<IResult> ToolSettings(HttpContext context, MediaToolCatalog tools)
+{
+    var probe = tools.ProbeAsync(context.RequestAborted);
+    var encoder = tools.EncoderAsync(context.RequestAborted);
+    await Task.WhenAll(probe, encoder);
+    var canConfigure = CanConfigureTools(context);
+    return Results.Ok(new
+    {
+        ffprobePath = canConfigure ? layout.MediaToolOverride : "",
+        canConfigure,
+        ffprobe = (await probe).Status,
+        ffmpeg = (await encoder).Status
+    });
+}
+
 async Task<IResult> Thumbnail(string id, bool publicOnly, HttpContext context, ThumbnailService thumbnails)
 {
     var item = repository.Find(id, publicOnly);
@@ -184,5 +206,5 @@ async Task<IResult> Thumbnail(string id, bool publicOnly, HttpContext context, T
 
 internal sealed record AddSourceRequest(string? Name, string Path);
 internal sealed record PublicationRequest(string[]? Ids, bool Published);
-internal sealed record ProbeSettingsRequest(string FfprobePath);
+internal sealed record ProbeSettingsRequest(string? FfprobePath);
 internal sealed record FolderPublicationRequest(string SourceId, string Folder, bool Published, string? Search, string? Kind, string? State);

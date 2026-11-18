@@ -5,16 +5,18 @@ using Didanihaa.Core;
 
 namespace Didanihaa.Infrastructure;
 
-public sealed class MetadataProbe(RuntimeLayout layout)
+public sealed class MetadataProbe(MediaToolCatalog tools)
 {
-    public bool IsAvailable => File.Exists(layout.FfprobePath);
+    public MetadataProbe(RuntimeLayout layout) : this(new MediaToolCatalog(layout)) { }
 
-    public async Task<MediaMetadata> ReadAsync(string file, CancellationToken cancellationToken)
+    public async Task<string?> FindExecutableAsync(CancellationToken cancellationToken) =>
+        (await tools.ProbeAsync(cancellationToken)).Path;
+
+    public async Task<MediaMetadata> ReadAsync(string file, string executable, CancellationToken cancellationToken)
     {
-        if (!IsAvailable) return MediaMetadata.Basic;
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(15));
-        using var process = new Process { StartInfo = new ProcessStartInfo(layout.FfprobePath)
+        using var process = new Process { StartInfo = new ProcessStartInfo(executable)
         {
             UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true
         }};
@@ -27,6 +29,7 @@ public sealed class MetadataProbe(RuntimeLayout layout)
             var outputTask = process.StandardOutput.ReadToEndAsync(timeout.Token);
             var errorTask = process.StandardError.ReadToEndAsync(timeout.Token);
             await process.WaitForExitAsync(timeout.Token);
+            await Task.WhenAll(outputTask, errorTask).WaitAsync(timeout.Token);
             var output = await outputTask;
             var error = await errorTask;
             if (process.ExitCode != 0) return new("error", null, null, [], error[..Math.Min(error.Length, 1000)]);
@@ -42,8 +45,16 @@ public sealed class MetadataProbe(RuntimeLayout layout)
         }
         finally
         {
-            try { if (process.Id > 0 && !process.HasExited) process.Kill(true); }
-            catch (InvalidOperationException) { }
+            try
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(true);
+                    using var cleanup = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    await process.WaitForExitAsync(cleanup.Token);
+                }
+            }
+            catch (Exception error) when (error is InvalidOperationException or System.ComponentModel.Win32Exception or OperationCanceledException) { }
         }
     }
 

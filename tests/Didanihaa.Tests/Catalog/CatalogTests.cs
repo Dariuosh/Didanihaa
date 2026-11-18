@@ -176,7 +176,8 @@ public sealed class CatalogTests : IDisposable
         var tools = Path.Combine(root, "tools"); Directory.CreateDirectory(tools);
         File.WriteAllBytes(Path.Combine(tools, "ffprobe.exe"), []);
         layout.SaveProbePath(tools);
-        Assert.Equal(Path.Combine("tools", "ffprobe.exe"), layout.Configuration.FfprobePath);
+        Assert.False(Path.IsPathRooted(layout.Configuration.FfprobePath));
+        Assert.Equal(Path.Combine(tools, "ffprobe.exe"), layout.FfprobePath);
         Assert.Equal(layout.Configuration.FfprobePath, RuntimeLayout.Load(["--root", root]).Configuration.FfprobePath);
         Assert.Throws<ArgumentException>(() => layout.SaveProbePath(Path.Combine(tools, "missing.exe")));
     }

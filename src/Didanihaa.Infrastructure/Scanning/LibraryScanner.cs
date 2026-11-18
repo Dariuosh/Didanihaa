@@ -13,6 +13,7 @@ public sealed class LibraryScanner(CatalogRepository repository, MetadataProbe p
             var source = repository.Sources().Single(item => item.Id == job.SourceId);
             PathSafety.RejectReparsePoints(source.ResolvedPath);
             if (!Directory.Exists(source.ResolvedPath)) throw new IOException("پوشه منبع در دسترس نیست.");
+            var executable = await probe.FindExecutableAsync(cancellationToken);
             Stack<string> directories = new(); directories.Push(source.ResolvedPath);
             while (directories.TryPop(out var directory))
             {
@@ -35,8 +36,9 @@ public sealed class LibraryScanner(CatalogRepository repository, MetadataProbe p
                             var size = file.Length; var modified = file.LastWriteTimeUtc.ToString("O", CultureInfo.InvariantCulture);
                             var previous = repository.FindByPath(source.Id, relative);
                             var unchanged = previous is not null && previous.SizeBytes == size && previous.ModifiedUtc == modified;
-                            var metadata = unchanged && (previous!.Metadata.Status == "complete" || !probe.IsAvailable)
-                                ? previous!.Metadata : await probe.ReadAsync(path, cancellationToken);
+                            var metadata = unchanged && previous!.Metadata.Status == "complete" ? previous.Metadata
+                                : executable is null ? MediaMetadata.Basic
+                                : await probe.ReadAsync(path, executable, cancellationToken);
                             file.Refresh();
                             if (!file.Exists || file.Length != size || file.LastWriteTimeUtc.ToString("O", CultureInfo.InvariantCulture) != modified)
                                 throw new IOException("فایل هنگام اسکن تغییر کرد؛ بعداً دوباره اسکن کنید.");

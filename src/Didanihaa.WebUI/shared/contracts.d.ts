@@ -36,7 +36,7 @@ declare namespace Didanihaa {
     mediaOnline: boolean; jobs: Job[];
   }
   interface Session {
-    token: string; root: string; metadataAvailable: boolean; publicPort: number;
+    token: string; root: string; publicPort: number;
     viewerUrls: string[];
   }
 }

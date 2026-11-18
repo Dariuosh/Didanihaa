@@ -7,8 +7,8 @@ public sealed class RuntimeLayout(string root, RuntimeConfiguration configuratio
     public string DataPath => ResolveOwnedPath(Configuration.DataDirectory);
     public string DatabasePath => Path.Combine(DataPath, "catalog.db");
     public string TempPath => ResolveOwnedPath(Configuration.TempDirectory);
-    public string FfprobePath => Path.IsPathFullyQualified(Configuration.FfprobePath)
-        ? Path.GetFullPath(Configuration.FfprobePath) : ResolveOwnedPath(Configuration.FfprobePath);
+    public string FfprobePath => MediaToolPath("ffprobe.exe").Path;
+    public string MediaToolOverride => IsAutomaticToolPath(Configuration.FfprobePath) ? "" : Configuration.FfprobePath;
     public string HostExecutable => ResolveOwnedPath(Configuration.HostExecutable);
     public string WebPath => ResolveOwnedPath(Configuration.WebDirectory);
     public string[] MediaExecutableCandidates => File.Exists(Path.Combine(Root, "Didanihaa.slnx"))
@@ -27,8 +27,7 @@ public sealed class RuntimeLayout(string root, RuntimeConfiguration configuratio
         if (Configuration.PublicPort is < 1024 or > 65535 || Configuration.MediaPort is < 1024 or > 65535
             || Configuration.PublicPort == Configuration.MediaPort)
             throw new InvalidOperationException("پورت شبکه و پورت داخلی پخش باید متفاوت و در بازه 1024..65535 باشند.");
-        if (string.IsNullOrWhiteSpace(Configuration.FfprobePath)) throw new ArgumentException("مسیر ابزار مشخص نشده است.");
-        _ = DataPath; _ = TempPath; _ = FfprobePath; _ = HostExecutable; _ = WebPath;
+        _ = DataPath; _ = TempPath; _ = HostExecutable; _ = WebPath;
     }
 
     public static string? Argument(string[] args, string name)
@@ -55,21 +54,70 @@ public sealed class RuntimeLayout(string root, RuntimeConfiguration configuratio
         ? Path.GetRelativePath(Root, absolutePath) : Path.GetFullPath(absolutePath);
 
     private readonly object settingsLock = new();
-    public void SaveProbePath(string path)
+    public (string Path, string Source) MediaToolPath(string executable)
     {
-        if (string.IsNullOrWhiteSpace(path) || path.Length > 4096) throw new ArgumentException("مسیر ابزار معتبر نیست.");
-        path = Path.GetFullPath(Path.Combine(Root, path.Trim().Trim('"')));
-        if (Directory.Exists(path)) path = Path.Combine(path, "ffprobe.exe");
-        if (Path.GetFileName(path).Equals("ffmpeg.exe", StringComparison.OrdinalIgnoreCase))
-            path = Path.Combine(Path.GetDirectoryName(path)!, "ffprobe.exe");
-        if (!Path.GetFileName(path).Equals("ffprobe.exe", StringComparison.OrdinalIgnoreCase) || !File.Exists(path))
-            throw new ArgumentException("ffprobe.exe در این مسیر پیدا نشد؛ پوشه bin یا خود فایل را مشخص کنید.");
+        var configured = MediaToolOverride;
+        if (configured.Length > 0)
+        {
+            var path = ResolveLocalToolPath(configured);
+            var directory = IsToolExecutable(path) ? Path.GetDirectoryName(path)! : path;
+            return (Path.Combine(directory, executable), "configured");
+        }
+
+        var bundled = Path.Combine(Root, "ffmpeg", "bin", executable);
+        PathSafety.RejectExistingReparsePoints(bundled);
+        if (File.Exists(bundled)) return (bundled, "bundled");
+        var legacy = Path.Combine(Root, "tools", executable);
+        PathSafety.RejectExistingReparsePoints(legacy);
+        return File.Exists(legacy) ? (legacy, "legacy") : (bundled, "bundled");
+    }
+
+    public void SaveProbePath(string? path)
+    {
+        var stored = "";
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            var absolute = ResolveLocalToolPath(path);
+            // A folder or either of the two known executable names selects the pair.
+            var directory = Directory.Exists(absolute) ? absolute
+                : IsToolExecutable(absolute) ? Path.GetDirectoryName(absolute)!
+                : throw new ArgumentException("پوشهٔ bin یا یکی از فایل‌های ffmpeg.exe و ffprobe.exe را وارد کن.");
+            var probe = Path.Combine(directory, "ffprobe.exe");
+            var encoder = Path.Combine(directory, "ffmpeg.exe");
+            PathSafety.RejectExistingReparsePoints(directory);
+            if (!File.Exists(probe) && !File.Exists(encoder))
+                throw new ArgumentException("در این پوشه ffmpeg.exe یا ffprobe.exe پیدا نشد.");
+            stored = StoreSource(probe);
+            if (IsAutomaticToolPath(stored)) stored = Path.Combine(".", stored);
+        }
         lock (settingsLock)
         {
-            Configuration = RuntimeSettings.Update(Root, current => current with { FfprobePath = StoreSource(path) });
+            Configuration = RuntimeSettings.Update(Root, current => current with { FfprobePath = stored });
         }
     }
 
+    private string ResolveLocalToolPath(string path)
+    {
+        path = path.Trim().Trim('"');
+        if (path.Length is 0 or > 4096 || Path.IsPathRooted(path) && !Path.IsPathFullyQualified(path))
+            throw new ArgumentException("مسیر ابزار معتبر نیست.");
+        var absolute = Path.GetFullPath(path, Root);
+        if (OperatingSystem.IsWindows() && absolute.StartsWith(@"\\", StringComparison.Ordinal))
+            throw new ArgumentException("مسیر ابزار باید روی همین دستگاه باشد.");
+        if (!Path.IsPathFullyQualified(path) && !PathSafety.IsWithin(Root, absolute))
+            throw new ArgumentException("مسیر نسبی ابزار باید داخل پوشهٔ دیدنی‌ها باشد.");
+        PathSafety.RejectExistingReparsePoints(absolute);
+        return absolute;
+    }
+
+    private static bool IsAutomaticToolPath(string? path) => string.IsNullOrWhiteSpace(path)
+        || path.Replace('\\', '/').Equals("tools/ffprobe.exe", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsToolExecutable(string path)
+    {
+        var name = Path.GetFileName(path);
+        return name.Equals("ffprobe.exe", StringComparison.OrdinalIgnoreCase) || name.Equals("ffmpeg.exe", StringComparison.OrdinalIgnoreCase);
+    }
 }
 
 public static class PathSafety

@@ -9,7 +9,7 @@ public sealed record RuntimeConfiguration
     public int MediaPort { get; init; } = 13522;
     public string DataDirectory { get; init; } = "data";
     public string TempDirectory { get; init; } = "temp/runtime";
-    public string FfprobePath { get; init; } = "tools/ffprobe.exe";
+    public string FfprobePath { get; init; } = "";
     public string HostExecutable { get; init; } = "publish/apps/host/Didanihaa.Host.exe";
     public string WebDirectory { get; init; } = "src/Didanihaa.WebUI/dist";
     [JsonExtensionData]

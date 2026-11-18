@@ -300,15 +300,45 @@ import { renderFolders } from '../shared/folders';
     void api('/api/profile', { name: element<HTMLInputElement>('profile-name').value, autoplay: element<HTMLInputElement>('profile-autoplay').checked, repeatFolder: element<HTMLInputElement>('profile-repeat').checked, navListLimit: Number(element<HTMLInputElement>('profile-nav-limit').value) })
       .then(async () => { profileFormDirty = false; await loadProfile(); notify('پروفایل مشترک ذخیره شد.'); }).catch(error => notify(error.message, true)).finally(() => { button.disabled = false; });
   });
+  interface ToolStatus {
+    state: 'ready' | 'missing' | 'invalid' | 'timeout';
+    source: 'configured' | 'bundled' | 'legacy';
+    version: string | null;
+    available: boolean;
+  }
+  interface ToolSettings {
+    ffprobePath: string;
+    canConfigure: boolean;
+    ffprobe: ToolStatus;
+    ffmpeg: ToolStatus;
+  }
+  const toolPath = element<HTMLInputElement>('probe-path');
+  const saveToolPath = element('settings-form').querySelector('button')!;
+  const toolStates = { ready: 'آماده', missing: 'اجرا نشد؛ فایل پیدا نشد', invalid: 'اجرا نشد یا نسخهٔ ابزار تأیید نشد', timeout: 'در زمان مقرر پاسخ نداد' };
+  const toolSources = { configured: 'مسیر انتخابی', bundled: 'ابزار همراه', legacy: 'پوشهٔ tools' };
+  function renderToolSettings(settings: ToolSettings): void {
+    toolPath.value = settings.ffprobePath;
+    toolPath.readOnly = !settings.canConfigure;
+    saveToolPath.disabled = !settings.canConfigure;
+    const render = (target: HTMLElement, name: string, tool: ToolStatus): void => {
+      const title = text('bdi', tool.version ? name + ' ' + tool.version : name);
+      target.replaceChildren(title, ' · ' + toolStates[tool.state] + ' · ' + toolSources[tool.source]);
+    };
+    render(element('probe-tool-state'), 'FFprobe', settings.ffprobe);
+    render(element('encoder-tool-state'), 'FFmpeg', settings.ffmpeg);
+    element('metadata-state').textContent = settings.ffprobe.available ? 'خواندن مشخصات پیشرفته فعال است.' : 'اسکن با مشخصات پایه فعال است.';
+  }
   async function start(): Promise<void> {
     session = await api<Didanihaa.Session>('/api/session');
     element('catalog-context').textContent = `کتابخانهٔ «${session.root.split(/[\\/]/).pop()}»`;
     element('catalog-context').title = session.root;
     element<HTMLAnchorElement>('open-tv').href = '/tv/';
     element('runtime-root').textContent = session.root;
-    const settings = await api<{ ffprobePath: string; thumbnailsAvailable: boolean }>('/api/settings');
-    element<HTMLInputElement>('probe-path').value = settings.ffprobePath;
-    element('metadata-state').textContent = session.metadataAvailable ? 'خواندن مشخصات پیشرفته فعال است.' : 'مشخصات پایه فعال است؛ ابزار خواندن مشخصات پیشرفته هنوز اضافه نشده.';
+    void api<ToolSettings>('/api/settings').then(renderToolSettings).catch(error => {
+      element('probe-tool-state').textContent = 'وضعیت ابزارها دریافت نشد.';
+      element('encoder-tool-state').textContent = '';
+      notify(error.message, true);
+    });
     element('viewer-addresses').textContent = session.viewerUrls.length ? session.viewerUrls.join('\n') : `http://<IP این رایانه>:${session.publicPort}/tv/`;
     await loadSources(); element<HTMLSelectElement>('source-filter').value = new URLSearchParams(location.search).get('sourceId') || '';
     await loadMedia(); await refresh();
@@ -316,10 +346,13 @@ import { renderFolders } from '../shared/folders';
     window.setInterval(() => { void refresh().catch(error => notify(`اتصال به مدیریت قطع شد: ${error.message}`, true)); }, 3000);
   }
   element<HTMLFormElement>('settings-form').addEventListener('submit', event => {
-    event.preventDefault(); const button = element('settings-form').querySelector('button')!; button.disabled = true;
-    void api<{ ffprobePath: string; metadataAvailable: boolean }>('/api/settings', { ffprobePath: element<HTMLInputElement>('probe-path').value })
-      .then(result => { element<HTMLInputElement>('probe-path').value = result.ffprobePath; element('metadata-state').textContent = result.metadataAvailable ? 'خواندن مشخصات پیشرفته فعال است.' : 'ابزار در دسترس نیست.'; notify('مسیر ابزار ذخیره شد.'); })
-      .catch(error => notify(error.message, true)).finally(() => { button.disabled = false; });
+    event.preventDefault();
+    if (toolPath.readOnly || saveToolPath.disabled) return;
+    saveToolPath.disabled = true;
+    void api<ToolSettings>('/api/settings', { ffprobePath: toolPath.value })
+      .then(result => { renderToolSettings(result); notify('مسیر ابزار ذخیره شد.'); })
+      .catch(error => notify(error.message, true))
+      .finally(() => { saveToolPath.disabled = toolPath.readOnly; });
   });
   void start().catch(error => notify(error.message, true));
 })();

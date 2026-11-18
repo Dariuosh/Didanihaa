@@ -54,7 +54,7 @@ Stop script-owned published processes with `tools/Stop-Didanihaa.ps1`. Stop them
 2. Review candidates and explicitly publish selected files or the direct contents of a folder.
 3. Open the viewer on your TV or another device on the trusted LAN.
 
-FFprobe is optional for advanced metadata; configure its path in administration. A sibling ffmpeg.exe enables derived JPEG thumbnails. Neither tool is bundled, and playback always serves the unchanged original. Codec support depends on the device and browser.
+FFprobe adds advanced metadata, and FFmpeg generates video thumbnails. Administration shows each tool's status and version. Didanihaa looks in ffmpeg/bin for bundled tools. To select a separate installation, open administration on localhost from the host computer. Playback serves the original file, and codec support depends on the device and browser.
 
 ## Development
 

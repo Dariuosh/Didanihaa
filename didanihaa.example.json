@@ -2,7 +2,7 @@
   "publicPort": 13521,
   "dataDirectory": "data",
   "tempDirectory": "temp/runtime",
-  "ffprobePath": "tools/ffprobe.exe",
+  "ffprobePath": "",
   "hostExecutable": "publish/apps/host/Didanihaa.Host.exe",
   "webDirectory": "src/Didanihaa.WebUI/dist",
   "mediaPort": 13522

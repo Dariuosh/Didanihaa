@@ -49,9 +49,17 @@
       <div class="service-layout"><div><div class="service-title"><span class="service-symbol">⏻</span><div><strong>Didanihaa Media</strong><div id="service-state" class="subtle">در حال بررسی…</div></div></div><div class="service-actions"><button class="button" data-service="install">نصب / ثبت مسیر فعلی</button><button class="button primary" data-service="start">راه‌اندازی</button><button class="button" data-service="restart">شروع مجدد</button><button class="button danger" data-service="stop">توقف</button></div><p class="subtle">عملیات سرویس با پنجرهٔ تأیید دسترسی ویندوز انجام می‌شود.</p></div><div class="runtime-details"><span class="subtle">آدرس تماشا در شبکه</span><div id="viewer-addresses" class="mono"></div><span class="subtle">ریشهٔ قابل انتقال</span><div id="runtime-root" class="mono"></div><span id="metadata-state" class="subtle"></span></div></div>
     </section>
     <section id="settings" class="panel">
-      <div class="section-heading"><div><h2>خواندن مشخصات رسانه</h2><p>از ابزار FFprobe همراه FFmpeg برای خواندن مدت، کدک، زبان و وضوح استفاده می‌شود.</p></div><span class="section-number">04 / SETTINGS</span></div>
-      <form id="settings-form" class="source-form"><label for="probe-path" class="path-field">پوشهٔ ابزار یا آدرس ffprobe.exe<input id="probe-path" class="mono" required maxlength="4096" placeholder="D:\Tools\ffmpeg\bin" autocomplete="off"></label><button class="button primary" type="submit">ذخیرهٔ مسیر</button></form>
-      <p class="subtle">برای تصویر بندانگشتی ویدیو، ffmpeg.exe کنار FFprobe قرار می‌گیرد. فقط یک تصویر ثابت ساخته می‌شود؛ پخش همیشه از فایل اصلی است. پس از تغییر ابزار، پوشه‌ها را دوباره اسکن کن تا مشخصات ناقص تکمیل شوند.</p>
+      <div class="section-heading"><div><h2>ابزارهای رسانه</h2><p>FFprobe مدت، کدک، زبان و وضوح را می‌خواند. FFmpeg تصویر بندانگشتی ویدیو را می‌سازد. پخش فایل اصلی به این ابزارها نیاز ندارد.</p></div></div>
+      <p id="tool-path-help" class="subtle">پوشهٔ bin نصب مطمئن FFmpeg را انتخاب کن. مسیر خالی یعنی تشخیص خودکار ابزار همراه. تغییر مسیر فقط از داشبورد localhost روی دستگاه میزبان ممکن است.</p>
+      <form id="settings-form" class="source-form">
+        <label for="probe-path" class="path-field">مسیر ابزارها<input id="probe-path" class="mono" dir="ltr" maxlength="4096" placeholder="D:\Tools\ffmpeg\bin" aria-describedby="tool-path-help" autocomplete="off" readonly></label>
+        <button class="button primary" type="submit" disabled>ذخیرهٔ مسیر</button>
+      </form>
+      <div role="status">
+        <p id="probe-tool-state">در حال بررسی FFprobe…</p>
+        <p id="encoder-tool-state">در حال بررسی FFmpeg…</p>
+      </div>
+      <p class="subtle">برای تکمیل مشخصات فایل‌های قبلی، پس از فعال‌شدن FFprobe پوشه‌ها را دوباره اسکن کن.</p>
     </section>
     <section id="profile" class="panel" hidden><div class="section-heading"><div><h2>پروفایل مشترک خانه</h2><p>همهٔ دستگاه‌های شبکه این علاقه‌مندی‌ها و تنظیمات را می‌بینند.</p></div></div><form id="profile-form" class="profile-form"><label for="profile-name">نام پروفایل<input id="profile-name" required maxlength="80"></label><label for="profile-nav-limit">تعداد پوشه‌های زیر هر دسته در منوی TV<input id="profile-nav-limit" type="number" min="1" max="20" step="1" value="5" required><small class="subtle">پیش‌فرض ۵ پوشه؛ فهرست کامل با «نمایش همه» در دسترس است.</small></label><label class="check-label" for="profile-autoplay"><input id="profile-autoplay" type="checkbox"> پخش خودکار فایل بعدی</label><label class="check-label" for="profile-repeat"><input id="profile-repeat" type="checkbox"> تکرار پوشه در پایان پلی‌لیست</label><button class="button accent" type="submit">ذخیرهٔ تنظیمات مشترک</button></form><p id="profile-summary" class="profile-summary"></p></section>
     <footer class="page-footer">دیدنی‌ها <span>رسانه‌های شخصی، برای لحظه‌های خودت.</span></footer>
