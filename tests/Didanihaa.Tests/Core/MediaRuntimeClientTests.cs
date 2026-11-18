@@ -37,9 +37,9 @@ public sealed class MediaRuntimeClientTests
             return Json(identity);
         });
         using var client = new HttpClient(handler);
-        Assert.Equal(identity, (await new MediaRuntimeClient(layout, client).ReadReadyAsync())!.Identity);
+        Assert.Equal(identity, (await new MediaRuntimeClient(layout, client).ReadReadyAsync(TestContext.Current.CancellationToken))!.Identity);
         var otherBinary = new RuntimeLayout(workspace.Root, layout.Configuration with { HostExecutable = "apps/other.exe" });
-        Assert.Null(await new MediaRuntimeClient(otherBinary, client).ReadReadyAsync());
+        Assert.Null(await new MediaRuntimeClient(otherBinary, client).ReadReadyAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class MediaRuntimeClientTests
         using var peer = RuntimeInstance.Acquire(new(first.Root, new()), RuntimeRole.Media);
         using var handler = new ReplyHandler(_ => Json(peer.Identity));
         using var client = new HttpClient(handler);
-        Assert.Null(await new MediaRuntimeClient(new(second.Root, new()), client).ReadReadyAsync());
+        Assert.Null(await new MediaRuntimeClient(new(second.Root, new()), client).ReadReadyAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -60,12 +60,12 @@ public sealed class MediaRuntimeClientTests
         using var instance = RuntimeInstance.Acquire(layout, RuntimeRole.Media);
         using var handler = new ReplyHandler(_ => Json(instance.Identity, false));
         using var client = new HttpClient(handler);
-        Assert.Null(await new MediaRuntimeClient(layout, client).ReadReadyAsync());
+        Assert.Null(await new MediaRuntimeClient(layout, client).ReadReadyAsync(TestContext.Current.CancellationToken));
         using var malformedHandler = new ReplyHandler(_ => new(HttpStatusCode.OK) { Content = new StringContent("not JSON") });
         using var malformedClient = new HttpClient(malformedHandler);
-        Assert.Null(await new MediaRuntimeClient(layout, malformedClient).ReadReadyAsync());
+        Assert.Null(await new MediaRuntimeClient(layout, malformedClient).ReadReadyAsync(TestContext.Current.CancellationToken));
         using var missingHandler = new ReplyHandler(_ => new(HttpStatusCode.NotFound));
         using var missingClient = new HttpClient(missingHandler);
-        Assert.Null(await new MediaRuntimeClient(layout, missingClient).ReadReadyAsync());
+        Assert.Null(await new MediaRuntimeClient(layout, missingClient).ReadReadyAsync(TestContext.Current.CancellationToken));
     }
 }
