@@ -24,6 +24,8 @@
 
 بستهٔ Windows x64 را از [Releases](https://github.com/Dariuosh/Didanihaa/releases) در پوشه‌ای قابل نوشتن استخراج کنید و `Didanihaa.exe` را باز کنید. در بستهٔ v0.1.0، شروع از `tools/Start-Didanihaa.ps1` با PowerShell 7 انجام می‌شود. [راهنمای بستهٔ قابل حمل](tools/Portable-README.md) راه‌اندازی و به‌روزرسانی را توضیح می‌دهد.
 
+کنسول دیدنی‌ها وضعیت اجرا را نمایش می‌دهد. برای توقف، `Ctrl+C` بزنید، `Q` و Enter را وارد کنید، یا کنسول را ببندید.
+
 ## ساخت از سورس
 
 پیش‌نیاز ساخت: Windows x64، PowerShell 7، [.NET SDK](https://dotnet.microsoft.com/download) مطابق [global.json](global.json)، و Node.js نسخهٔ 22.18 یا جدیدتر همراه npm. پروژه C# 15 / .NET 11، TypeScript، Lit و Vite دارد. اجرای بستهٔ پیش‌فرض self-contained به نصب SDK یا Node نیاز ندارد.

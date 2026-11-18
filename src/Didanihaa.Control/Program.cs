@@ -179,6 +179,7 @@ async Task<int> RunAsync()
         finally { serviceGate.Release(); }
     });
     app.Logger.LogInformation("Didanihaa LAN: http://localhost:{Port}/admin/ — root: {Root}", layout.Configuration.PublicPort, layout.Root);
+    using var stopSignal = OperatingSystem.IsWindows() ? RuntimeStopSignal.Listen(args, app.Lifetime.StopApplication) : null;
     await app.RunAsync();
     return 0;
 

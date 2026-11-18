@@ -95,6 +95,7 @@ async Task<int> RunAsync()
         { stream?.Dispose(); return Results.NotFound(); }
     });
     app.Logger.LogInformation("Didanihaa Media (internal): http://localhost:{Port}/health — root: {Root}", layout.Configuration.MediaPort, layout.Root);
+    using var stopSignal = OperatingSystem.IsWindows() ? RuntimeStopSignal.Listen(args, app.Lifetime.StopApplication) : null;
     await app.RunAsync();
     return 0;
 }

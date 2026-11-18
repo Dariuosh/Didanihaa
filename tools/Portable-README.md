@@ -6,6 +6,8 @@
 
 ZIP را در پوشه‌ای با دسترسی نوشتن استخراج کنید. روی `Didanihaa.exe` دوبارکلیک کنید. Control و Media پس از بررسی پورت‌ها شروع می‌شوند و داشبورد روی `127.0.0.1` در مرورگر پیش‌فرض باز می‌شود.
 
+کنسول برای نمایش وضعیت اجرای برنامه باز می‌ماند. برای توقف، `Ctrl+C` بزنید، `Q` و سپس Enter را وارد کنید، یا پنجرهٔ کنسول را ببندید.
+
 ادمین در مرورگر پیش‌فرض باز می‌شود. در اولین اجرا didanihaa.json از نمونه ساخته می‌شود؛ تنظیمات موجود بازنویسی نمی‌شوند.
 
 لاگ‌ها و وضعیت فرایندهای راه‌انداز در `temp/runtime` هستند. وضعیت نسخه‌های قدیمی از `temp/dev/processes.json` همان بسته خوانده می‌شود و ثبت بعدی در مسیر جدید انجام می‌شود؛ فایل و لاگ‌های قدیمی حفظ می‌شوند.
@@ -26,11 +28,7 @@ FFprobe و FFmpeg اختیاری‌اند. برنامه ابزار همراه ر
 
 ## توقف و به‌روزرسانی
 
-```powershell
-.\tools\Stop-Didanihaa.ps1
-```
-
-اگر Media به‌صورت Windows Service نصب شده، ابتدا آن را از داشبورد متوقف کنید، سپس Stop را اجرا کنید. از data و didanihaa.json پشتیبان بگیرید و فایل‌های ZIP جدید را با جایگزینی فایل‌های برنامه در همان پوشه استخراج کنید. بسته، didanihaa.json یا data شخصی ندارد. فایل‌های موجود خودتان را حذف نکنید. پس از پایان، Start را اجرا و در صورت استفاده، سرویس را از داشبورد راه‌اندازی کنید.
+اگر Media به‌صورت Windows Service اجراست، ابتدا آن را از داشبورد متوقف کنید. سپس از کنسول دیدنی‌ها خارج شوید. برای اجرای شروع‌شده با PowerShell، از `tools/Stop-Didanihaa.ps1` استفاده کنید. از data و didanihaa.json پشتیبان بگیرید و فایل‌های ZIP جدید را در همان پوشه جایگزین کنید. برای شروع دوباره، `Didanihaa.exe` را باز کنید.
 
 ## شبکه و سرویس
 
@@ -46,4 +44,4 @@ install مجوز خواندن/اجرا برای ریشه و نوشتن محدو�
 
 ## English quick start
 
-Extract the Windows x64 ZIP into a writable folder and double-click `Didanihaa.exe`. Review and explicitly publish media in administration, then open `http://<LAN-IP>:13521/` on a trusted LAN device. Before updates, stop a registered Media service through the dashboard, then run `tools/Stop-Didanihaa.ps1` in PowerShell 7. Preserve `data/` and `didanihaa.json` when replacing application files. Service installation and firewall setup are optional operations.
+Extract the Windows x64 ZIP into a writable folder and double-click `Didanihaa.exe`. Review and explicitly publish media in administration, then open `http://<LAN-IP>:13521/` on a trusted LAN device. To exit, close the Didanihaa console, press `Ctrl+C`, or enter `Q`. Before updating, stop any running Media service through the dashboard and exit the console. Preserve `data/` and `didanihaa.json` when replacing application files. Service installation and firewall setup are optional operations.

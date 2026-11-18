@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net11.0-windows</TargetFramework>
-    <OutputType>WinExe</OutputType>
-    <UseWindowsForms>true</UseWindowsForms>
+    <OutputType>Exe</OutputType>
     <AssemblyName>Didanihaa</AssemblyName>
     <RootNamespace>Didanihaa.Launcher</RootNamespace>
   </PropertyGroup>

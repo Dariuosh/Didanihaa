@@ -24,6 +24,8 @@ Scanning never publishes new files automatically. Changed files return to review
 
 Extract the Windows x64 ZIP from [Releases](https://github.com/Dariuosh/Didanihaa/releases) to a writable folder and open `Didanihaa.exe`. The v0.1.0 ZIP starts through `tools/Start-Didanihaa.ps1` with PowerShell 7. See the [portable package guide](tools/Portable-README.md).
 
+The Didanihaa console displays startup and runtime status. Close the console, press `Ctrl+C`, or enter `Q` to stop the instance it started.
+
 ## Build from source
 
 Build requirements: Windows x64, PowerShell 7, the [.NET SDK](https://dotnet.microsoft.com/download) specified in [global.json](global.json), and Node.js 22.18+ with npm. The stack is C# 15 / .NET 11, TypeScript, Lit and Vite. The default self-contained published package needs neither the SDK nor Node to run.

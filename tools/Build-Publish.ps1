@@ -15,7 +15,7 @@ try {
     $loadedApplications = @(Get-Process -Name 'Didanihaa', 'Didanihaa.Host', 'Didanihaa.Control' -ErrorAction SilentlyContinue | Where-Object {
         try { $_.Path.StartsWith($publishRoot + '\', [StringComparison]::OrdinalIgnoreCase) } catch { $false }
     })
-    if ($loadedApplications.Count -gt 0) { throw 'Published applications are running. Stop them before Build-Publish; stop a registered Media service from the dashboard first.' }
+    if ($loadedApplications.Count -gt 0) { throw 'Published applications are running. Exit the Didanihaa console before Build-Publish. Stop a registered Media service from the dashboard first.' }
     foreach ($application in @(@('Didanihaa.Media','host'), @('Didanihaa.Control','control'))) {
         $projectPath = Join-Path $workspaceRoot ('src\{0}\{0}.csproj' -f $application[0])
         $arguments = @('publish', $projectPath, '-c', 'Release', '-r', 'win-x64', '--self-contained', $selfContained, '-p:RestoreLockedMode=true',

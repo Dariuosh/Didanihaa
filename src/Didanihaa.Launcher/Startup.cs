@@ -16,13 +16,15 @@ internal sealed class Startup(RuntimeLayout layout)
         public Uri GetUrl() => new($"http://127.0.0.1:{Port}/{Endpoint}");
     }
 
-    public async Task<int> RunAsync(bool showBrowser, bool loopbackOnly)
+    public async Task<int> RunAsync(bool showBrowser, bool loopbackOnly, ConsoleShutdown shutdown)
     {
         var directory = RuntimeSettings.StatePath(layout.Root);
-        FileStream gate;
-        try { gate = RuntimeFile.Lock(Path.Combine(directory, "startup.lock"), TimeSpan.Zero); }
-        catch (IOException error) when ((error.HResult & 0xffff) is 32 or 33) { return 0; }
-        using var startupLock = gate;
+        using var controller = TryLock(Path.Combine(directory, "controller.lock"));
+        if (controller is null)
+        {
+            Console.WriteLine("کنسول دیدنی‌ها برای این پوشه از قبل باز است.");
+            return 0;
+        }
         var control = new Backend(RuntimeRole.Control, layout.ResolveOwnedPath("apps/control/Didanihaa.Control.exe"),
             layout.Configuration.PublicPort, "admin/api/session");
         var media = new Backend(RuntimeRole.Media, layout.HostExecutable, layout.Configuration.MediaPort, "_internal/runtime");
@@ -34,106 +36,156 @@ internal sealed class Startup(RuntimeLayout layout)
         }
 
         var ledger = new ProcessLedger(layout.Root);
-        var records = ledger.Read();
-        var children = new List<Process>();
+        var records = new List<OwnedProcess>();
+        using var job = new BackendJob();
         using var client = new HttpClient(new SocketsHttpHandler { UseProxy = false, AllowAutoRedirect = false })
         { Timeout = TimeSpan.FromSeconds(1) };
-        RuntimeIdentity controlIdentity;
+        var token = shutdown.Token;
         try
         {
-            var existingControl = await DiscoverAsync(client, control);
-            var service = new WindowsServiceManager(layout).ReadState();
-            var ownsService = service is { Installed: true, Owned: true };
-            var serviceActive = ownsService && service.State is ("running" or "starting");
-            var existingMedia = await DiscoverAsync(client, media, serviceActive);
-            ledger.Write(records);
-            controlIdentity = existingControl ?? await StartAsync(control);
-            if (existingMedia is not null || serviceActive) await WaitForAsync(client, media, null);
-            else if (!ownsService) await StartAsync(media);
-            using var page = await client.GetAsync(admin, HttpCompletionOption.ResponseHeadersRead);
-            if (!page.IsSuccessStatusCode || page.Content.Headers.ContentType?.MediaType != "text/html")
-                throw new InvalidOperationException("داشبورد آماده نشد. فایل‌های web بسته را بررسی کن.");
-        }
-        catch
-        {
-            // Roll back only children launched in this attempt. Reused processes and SCM stay independent.
-            foreach (var process in children.AsEnumerable().Reverse())
+            using (var startupLock = RuntimeFile.Lock(Path.Combine(directory, "startup.lock"), TimeSpan.FromSeconds(2)))
             {
+                Console.WriteLine("دیدنی‌ها | در حال راه‌اندازی");
+                records = ledger.Read();
+                var existingControl = await DiscoverAsync(client, control, token);
+                var service = new WindowsServiceManager(layout).ReadState();
+                var ownsService = service is { Installed: true, Owned: true };
+                var serviceActive = ownsService && service.State is ("running" or "starting");
+                var existingMedia = await DiscoverAsync(client, media, token, serviceActive);
+                ledger.Write(records);
+                var controlIdentity = existingControl ?? await StartAsync(control);
+                PrintReady(controlIdentity, job.Owns(RuntimeRole.Control), false);
+                if (existingMedia is not null || serviceActive)
+                    PrintReady(await WaitForAsync(client, media, null, token), false, serviceActive);
+                else if (!ownsService)
+                    PrintReady(await StartAsync(media), true, false);
+                else
+                    Console.WriteLine("Media | سرویس ویندوز متوقف است. برای راه‌اندازی از داشبورد استفاده کن.");
+
+                using var page = await client.GetAsync(admin, HttpCompletionOption.ResponseHeadersRead, token);
+                if (!page.IsSuccessStatusCode || page.Content.Headers.ContentType?.MediaType != "text/html")
+                    throw new InvalidOperationException("داشبورد آماده نشد. فایل‌های web بسته را بررسی کن.");
+                Console.WriteLine($"داشبورد  {admin}");
+                Console.WriteLine("گزارش‌ها  temp/runtime");
+                Console.WriteLine("توقف و خروج  Ctrl+C، بستن پنجره، یا Q و Enter");
+                if (showBrowser)
+                {
+                    try { OpenDashboard(admin, controlIdentity, directory); }
+                    catch (Exception error) when (error is Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
+                    { Console.Error.WriteLine("مرورگر باز نشد. نشانی داشبورد را دستی باز کن."); }
+                }
+            }
+
+            _ = Task.Run(() =>
+            {
+                while (!token.IsCancellationRequested && Console.ReadLine() is { } line)
+                    if (line.Trim().Equals("q", StringComparison.OrdinalIgnoreCase)) { shutdown.Request(); break; }
+            });
+            var mediaExited = false;
+            while (!token.IsCancellationRequested)
+            {
+                if (job.Exited(RuntimeRole.Control))
+                {
+                    shutdown.Request();
+                    throw new InvalidOperationException("Control متوقف شد. گزارش temp/runtime را بررسی کن.");
+                }
+                if (!mediaExited && job.Exited(RuntimeRole.Media))
+                {
+                    mediaExited = true;
+                    Console.Error.WriteLine("Media متوقف شد. داشبورد در دسترس است.");
+                }
+                await Task.Delay(500, token);
+            }
+            return 0;
+        }
+        finally
+        {
+            if (job.Owns(RuntimeRole.Control) || job.Owns(RuntimeRole.Media))
+            {
+                TryWriteStatus("در حال توقف دیدنی‌ها…");
+                var graceful = await job.StopAsync();
+                TryWriteStatus(graceful ? "فرایندهای این اجرا متوقف شدند." : "مهلت پایان یافت و فرایندهای این اجرا بسته شدند.");
                 try
                 {
-                    if (!process.HasExited) { process.Kill(entireProcessTree: true); process.WaitForExit(3000); }
-                    if (process.HasExited) records.RemoveAll(record => record.Id == process.Id);
+                    using var startupLock = RuntimeFile.Lock(Path.Combine(directory, "startup.lock"), TimeSpan.Zero);
+                    ledger.Write(ledger.Read());
                 }
-                catch (Exception error) when (error is InvalidOperationException or Win32Exception) { }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or JsonException) { }
             }
-            ledger.Write(records);
-            throw;
         }
-        finally { foreach (var child in children) child.Dispose(); }
-
-        if (showBrowser) OpenDashboard(admin, controlIdentity, directory);
-        return 0;
 
         async Task<RuntimeIdentity> StartAsync(Backend backend)
         {
-            var start = new ProcessStartInfo(backend.Executable)
-            {
-                WorkingDirectory = layout.Root, UseShellExecute = false, CreateNoWindow = true
-            };
-            start.ArgumentList.Add("--root");
-            start.ArgumentList.Add(layout.Root);
-            start.ArgumentList.Add("--launcher-log");
-            if (backend.Role == RuntimeRole.Control && loopbackOnly) start.ArgumentList.Add("--loopback-only");
-            var child = Process.Start(start) ?? throw new InvalidOperationException("اجرای بخش برنامه آغاز نشد.");
-            children.Add(child);
-            _ = child.SafeHandle;
+            token.ThrowIfCancellationRequested();
+            Console.WriteLine($"{backend.Role} | در حال شروع روی درگاه {backend.Port}");
+            var child = job.Start(backend.Role, backend.Executable, layout.Root, loopbackOnly);
             records.Add(new(backend.Role.ToString(), child.Id, backend.Executable, child.StartTime.ToUniversalTime()));
             ledger.Write(records);
-            return await WaitForAsync(client, backend, child);
+            return await WaitForAsync(client, backend, child, token);
         }
     }
 
-    private async Task<RuntimeIdentity?> DiscoverAsync(HttpClient client, Backend backend, bool ownedServiceStarting = false)
+    private static FileStream? TryLock(string path)
     {
-        var identity = await ReadIdentityAsync(client, backend);
+        try { return RuntimeFile.Lock(path, TimeSpan.Zero); }
+        catch (IOException error) when ((error.HResult & 0xffff) is 32 or 33) { return null; }
+    }
+
+    private static void PrintReady(RuntimeIdentity identity, bool owned, bool service)
+    {
+        var mode = owned ? "اجرای این کنسول" : service ? "سرویس ویندوز" : "اجرای مستقل";
+        Console.WriteLine($"{identity.Role} | آماده ({mode}، PID {identity.ProcessId})");
+    }
+
+    private static void TryWriteStatus(string message)
+    {
+        // The console can already be unavailable during CTRL_CLOSE_EVENT.
+        try { Console.WriteLine(message); } catch (IOException) { }
+    }
+    private async Task<RuntimeIdentity?> DiscoverAsync(HttpClient client, Backend backend, CancellationToken token, bool ownedServiceStarting = false)
+    {
+        var identity = await ReadIdentityAsync(client, backend, token);
         if (identity is not null) return identity;
-        if (!ownedServiceStarting && await CanConnectAsync(backend.Port))
+        if (!ownedServiceStarting && await CanConnectAsync(backend.Port, token))
             throw new InvalidOperationException($"درگاه {backend.Port} برای {backend.Role} اشغال است. اجرای متعلق به این پوشه تأیید نشد.");
         return null;
     }
 
-    private async Task<RuntimeIdentity> WaitForAsync(HttpClient client, Backend backend, Process? child)
+    private async Task<RuntimeIdentity> WaitForAsync(HttpClient client, Backend backend, Process? child, CancellationToken token)
     {
         var elapsed = Stopwatch.StartNew();
         while (elapsed.Elapsed < TimeSpan.FromSeconds(20) && child is not { HasExited: true })
         {
-            var identity = await ReadIdentityAsync(client, backend, requireReady: true);
+            var identity = await ReadIdentityAsync(client, backend, token, requireReady: true);
             if (identity is not null && (child is null || child.Id == identity.ProcessId)) return identity;
-            await Task.Delay(150);
+            await Task.Delay(150, token);
         }
         throw new InvalidOperationException($"{backend.Role} روی درگاه {backend.Port} آماده نشد. گزارش temp/runtime را بررسی کن.");
     }
 
-    private async Task<RuntimeIdentity?> ReadIdentityAsync(HttpClient client, Backend backend, bool requireReady = false)
+    private async Task<RuntimeIdentity?> ReadIdentityAsync(HttpClient client, Backend backend, CancellationToken token, bool requireReady = false)
     {
         try
         {
             var identity = backend.Role == RuntimeRole.Control
-                ? (await client.GetFromJsonAsync<Session>(backend.GetUrl()))?.Runtime
-                : (await client.GetFromJsonAsync<RuntimeStatus>(backend.GetUrl())) is { } media && (!requireReady || media.CatalogReady)
+                ? (await client.GetFromJsonAsync<Session>(backend.GetUrl(), token))?.Runtime
+                : (await client.GetFromJsonAsync<RuntimeStatus>(backend.GetUrl(), token)) is { } media && (!requireReady || media.CatalogReady)
                     ? media.Identity : null;
             return identity?.IsCurrent(layout.Root, backend.Role, backend.Executable) == true ? identity : null;
         }
-        catch (Exception error) when (error is HttpRequestException or JsonException or OperationCanceledException or NotSupportedException)
+        catch (OperationCanceledException) when (!token.IsCancellationRequested) { return null; }
+        catch (Exception error) when (error is HttpRequestException or JsonException or NotSupportedException)
         { return null; }
     }
 
-    private static async Task<bool> CanConnectAsync(int port)
+    private static async Task<bool> CanConnectAsync(int port, CancellationToken token)
     {
         using var client = new TcpClient();
-        using var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(400));
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+        timeout.CancelAfter(TimeSpan.FromMilliseconds(400));
         try { await client.ConnectAsync(System.Net.IPAddress.Loopback, port, timeout.Token); return true; }
-        catch (Exception error) when (error is SocketException or OperationCanceledException) { return false; }
+        catch (OperationCanceledException) when (!token.IsCancellationRequested) { return false; }
+        catch (SocketException) { return false; }
     }
 
     private static void OpenDashboard(Uri admin, RuntimeIdentity control, string directory)
