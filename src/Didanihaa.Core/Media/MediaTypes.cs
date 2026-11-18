@@ -1,30 +1,4 @@
-using System.Text;
-
 namespace Didanihaa.Core;
-
-public sealed record SourceFolder(string Id, string Name, string StoredPath, string ResolvedPath, string CreatedUtc);
-public sealed record MediaStreamInfo(string Kind, string? Codec, string? Language, int? Width, int? Height, int? Channels);
-public sealed record MediaMetadata(string Status, double? DurationSeconds, string? Title, IReadOnlyList<MediaStreamInfo> Streams, string? Error = null)
-{
-    public static MediaMetadata Basic => new("basic", null, null, []);
-}
-public sealed record MediaCandidate(string Id, string SourceId, string RelativePath, string Title, string Kind,
-    string MimeType, long SizeBytes, string ModifiedUtc, bool Published, bool Available, MediaMetadata Metadata);
-public sealed record PublicMedia(string Id, string Title, string Kind, string MimeType, long SizeBytes,
-    double? DurationSeconds, string StreamUrl, string? ThumbnailUrl = null);
-public sealed record Page<T>(IReadOnlyList<T> Items, int Total, int Offset, int Limit);
-public sealed record MediaLocation(string SourceId, string Folder, string Name, int Index, int Total);
-public sealed record ScanJob(string Id, string SourceId, string Status, int Scanned, int Errors,
-    string CreatedUtc, string? FinishedUtc, string? Message);
-public sealed record CatalogStatistics(int Sources, int Candidates, int Published, int Unavailable);
-public sealed record ServiceState(bool Supported, bool Installed, string State, string? ExecutablePath = null);
-public sealed record ServiceActionResult(bool Success, string Message);
-
-public static class SearchText
-{
-    public static string Normalize(string value) => value.Normalize(NormalizationForm.FormKC)
-        .Replace('ي', 'ی').Replace('ى', 'ی').Replace('ك', 'ک').Replace('\u200c', ' ').Trim().ToUpperInvariant();
-}
 
 public static class MediaTypes
 {
