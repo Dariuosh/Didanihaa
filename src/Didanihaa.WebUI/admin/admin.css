@@ -2,7 +2,7 @@
 @import '/admin/palette.css';
 @import '/admin/layout.css';
 @import '/admin/theme.css';
-@import '/admin/ux.css';
+@import '/admin/catalog-interactions.css';
 @import '/shared/folders.css';
-@import '/admin/vod.css';
+@import '/admin/appearance.css';
 @import '/admin/navigation.css';
