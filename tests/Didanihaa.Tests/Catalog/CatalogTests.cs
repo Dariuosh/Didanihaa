@@ -160,14 +160,14 @@ public sealed class CatalogTests : IDisposable
     }
 
     [Fact]
-    public void RuntimeLoadsPortableExampleWhenLocalConfigurationIsAbsent()
+    public void RuntimeCreatesLocalConfigurationFromPortableExampleWhenAbsent()
     {
         File.Delete(Path.Combine(root, "didanihaa.json"));
         File.WriteAllText(Path.Combine(root, "didanihaa.example.json"), JsonSerializer.Serialize(layout.Configuration));
         var loaded = RuntimeLayout.Load(["--root", root]);
         Assert.Equal(root, loaded.Root);
         Assert.Equal(layout.Configuration.PublicPort, loaded.Configuration.PublicPort);
-        Assert.False(File.Exists(Path.Combine(root, "didanihaa.json")));
+        Assert.True(File.Exists(Path.Combine(root, "didanihaa.json")));
     }
 
     [Fact]

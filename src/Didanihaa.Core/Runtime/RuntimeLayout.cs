@@ -1,21 +1,8 @@
-using System.Text.Json;
-
 namespace Didanihaa.Core;
-
-public sealed record RuntimeConfiguration
-{
-    public int PublicPort { get; init; } = 13521;
-    public int MediaPort { get; init; } = 13522;
-    public string DataDirectory { get; init; } = "data";
-    public string TempDirectory { get; init; } = "temp/runtime";
-    public string FfprobePath { get; init; } = "tools/ffprobe.exe";
-    public string HostExecutable { get; init; } = "publish/apps/host/Didanihaa.Host.exe";
-    public string WebDirectory { get; init; } = "src/Didanihaa.WebUI/dist";
-}
 
 public sealed class RuntimeLayout(string root, RuntimeConfiguration configuration)
 {
-    public string Root { get; } = Path.GetFullPath(root);
+    public string Root { get; } = RuntimeRoot.Normalize(root);
     public RuntimeConfiguration Configuration { get; private set; } = configuration;
     public string DataPath => ResolveOwnedPath(Configuration.DataDirectory);
     public string DatabasePath => Path.Combine(DataPath, "catalog.db");
@@ -24,22 +11,24 @@ public sealed class RuntimeLayout(string root, RuntimeConfiguration configuratio
         ? Path.GetFullPath(Configuration.FfprobePath) : ResolveOwnedPath(Configuration.FfprobePath);
     public string HostExecutable => ResolveOwnedPath(Configuration.HostExecutable);
     public string WebPath => ResolveOwnedPath(Configuration.WebDirectory);
+    public string[] MediaExecutableCandidates => File.Exists(Path.Combine(Root, "Didanihaa.slnx"))
+        ? [HostExecutable, ResolveOwnedPath("src/Didanihaa.Media/bin/Debug/net11.0/Didanihaa.Host.exe"),
+            ResolveOwnedPath("src/Didanihaa.Media/bin/Release/net11.0/Didanihaa.Host.exe")]
+        : [HostExecutable];
 
     public static RuntimeLayout Load(string[] args)
     {
-        var rootArgument = Argument(args, "--root");
-        var root = rootArgument is null ? FindRoot(AppContext.BaseDirectory) ?? FindRoot(Environment.CurrentDirectory)
-            ?? throw new InvalidOperationException("didanihaa.json پیدا نشد؛ --root را مشخص کنید.") : Path.GetFullPath(rootArgument);
-        var configurationFile = Path.Combine(root, "didanihaa.json");
-        if (!File.Exists(configurationFile)) configurationFile = Path.Combine(root, "didanihaa.example.json");
-        var configuration = JsonSerializer.Deserialize<RuntimeConfiguration>(File.ReadAllText(configurationFile),
-            new JsonSerializerOptions(JsonSerializerDefaults.Web)) ?? throw new InvalidOperationException("تنظیمات معتبر نیست.");
-        if (configuration.PublicPort is < 1024 or > 65535 || configuration.MediaPort is < 1024 or > 65535
-            || configuration.PublicPort == configuration.MediaPort)
+        var root = RuntimeRoot.Resolve(args, AppContext.BaseDirectory, Environment.CurrentDirectory);
+        return new(root, RuntimeSettings.Load(root));
+    }
+
+    internal void Validate()
+    {
+        if (Configuration.PublicPort is < 1024 or > 65535 || Configuration.MediaPort is < 1024 or > 65535
+            || Configuration.PublicPort == Configuration.MediaPort)
             throw new InvalidOperationException("پورت شبکه و پورت داخلی پخش باید متفاوت و در بازه 1024..65535 باشند.");
-        var layout = new RuntimeLayout(root, configuration);
-        _ = layout.DataPath; _ = layout.TempPath; _ = layout.FfprobePath; _ = layout.HostExecutable; _ = layout.WebPath;
-        return layout;
+        if (string.IsNullOrWhiteSpace(Configuration.FfprobePath)) throw new ArgumentException("مسیر ابزار مشخص نشده است.");
+        _ = DataPath; _ = TempPath; _ = FfprobePath; _ = HostExecutable; _ = WebPath;
     }
 
     public static string? Argument(string[] args, string name)
@@ -52,10 +41,12 @@ public sealed class RuntimeLayout(string root, RuntimeConfiguration configuratio
 
     public string ResolveOwnedPath(string relativePath)
     {
+        if (string.IsNullOrWhiteSpace(relativePath)) throw new ArgumentException("مسیر اجرایی مشخص نشده است.");
         if (Path.IsPathFullyQualified(relativePath)) throw new ArgumentException("مسیرهای اجرایی باید نسبت به ریشه باشند.");
         var result = Path.GetFullPath(Path.Combine(Root, relativePath));
         if (!PathSafety.IsWithin(Root, result) || PathSafety.SamePath(Root, result))
             throw new ArgumentException("مسیر اجرایی باید داخل ریشه باشد.");
+        PathSafety.RejectExistingReparsePoints(result);
         return result;
     }
 
@@ -75,21 +66,10 @@ public sealed class RuntimeLayout(string root, RuntimeConfiguration configuratio
             throw new ArgumentException("ffprobe.exe در این مسیر پیدا نشد؛ پوشه bin یا خود فایل را مشخص کنید.");
         lock (settingsLock)
         {
-            var updated = Configuration with { FfprobePath = StoreSource(path) };
-            var destination = Path.Combine(Root, "didanihaa.json");
-            var temporary = destination + ".new";
-            File.WriteAllText(temporary, JsonSerializer.Serialize(updated, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
-            File.Move(temporary, destination, true);
-            Configuration = updated;
+            Configuration = RuntimeSettings.Update(Root, current => current with { FfprobePath = StoreSource(path) });
         }
     }
 
-    private static string? FindRoot(string start)
-    {
-        for (var directory = new DirectoryInfo(start); directory is not null; directory = directory.Parent)
-            if (File.Exists(Path.Combine(directory.FullName, "didanihaa.json")) || File.Exists(Path.Combine(directory.FullName, "didanihaa.example.json"))) return directory.FullName;
-        return null;
-    }
 }
 
 public static class PathSafety
@@ -115,6 +95,21 @@ public static class PathSafety
             current = Path.Combine(current, segment);
             if ((File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
                 throw new IOException("مسیر شامل پیوند یا reparse point است.");
+        }
+    }
+
+    public static void RejectExistingReparsePoints(string path)
+    {
+        var full = Path.GetFullPath(path);
+        var pathRoot = Path.GetPathRoot(full)!;
+        var current = pathRoot;
+        foreach (var segment in full[pathRoot.Length..].Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries))
+        {
+            current = Path.Combine(current, segment);
+            FileAttributes attributes;
+            try { attributes = File.GetAttributes(current); }
+            catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException) { return; }
+            if ((attributes & FileAttributes.ReparsePoint) != 0) throw new IOException("مسیر شامل پیوند یا reparse point است.");
         }
     }
 

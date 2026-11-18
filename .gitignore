@@ -16,6 +16,7 @@
 # Machine-specific configuration. Track didanihaa.example.json instead.
 /didanihaa.json
 /didanihaa.local.json
+/didanihaa.json.*.tmp
 .env
 .env.*
 !.env.example
