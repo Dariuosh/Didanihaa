@@ -62,3 +62,5 @@ jobs:
         run: dotnet build Didanihaa.slnx --configuration Release --no-restore
       - name: Test
         run: dotnet test Didanihaa.slnx --configuration Release --no-build --no-restore
+      - name: Test launcher state compatibility
+        run: ./tests/Didanihaa.Tools.Tests/Runtime.Common.Tests.ps1

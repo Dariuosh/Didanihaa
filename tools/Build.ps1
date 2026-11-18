@@ -19,5 +19,6 @@ try {
     if (-not $SkipTests) {
         dotnet test Didanihaa.slnx --no-build --no-restore
         if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
+        & (Join-Path $workspaceRoot 'tests\Didanihaa.Tools.Tests\Runtime.Common.Tests.ps1')
     }
 } finally { Pop-Location }

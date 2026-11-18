@@ -2,12 +2,12 @@
 param()
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'internal\Runtime.Common.ps1')
-$workspaceRoot = Get-DevelopmentRoot
-$records = @(Get-DevelopmentState -Root $workspaceRoot)
+$workspaceRoot = Get-DidanihaaRoot
+$records = @(Get-LauncherState -Root $workspaceRoot -Mode Development)
 $remaining = [Collections.Generic.List[object]]::new()
 foreach ($role in @('Vite', 'Media', 'Control')) {
     foreach ($record in $records | Where-Object role -eq $role) {
-        $trackedProcess = Get-TrackedDevelopmentProcess -Record $record
+        $trackedProcess = Get-TrackedProcess -Record $record
         if ($null -eq $trackedProcess) { continue }
         try {
             Stop-Process -Id $trackedProcess.Id -ErrorAction Stop
@@ -19,5 +19,5 @@ foreach ($role in @('Vite', 'Media', 'Control')) {
         }
     }
 }
-Save-DevelopmentState -Root $workspaceRoot -Processes $remaining.ToArray()
+Save-LauncherState -Root $workspaceRoot -Mode Development -Processes $remaining.ToArray()
 Write-Output 'Only processes recorded by this development launcher were targeted; catalog files were preserved.'

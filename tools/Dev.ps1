@@ -6,27 +6,24 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'internal\Runtime.Common.ps1')
-$workspaceRoot = Get-DevelopmentRoot
+$workspaceRoot = Get-DidanihaaRoot
 Initialize-LocalConfiguration -Root $workspaceRoot
 $configuration = Get-Content -Raw -LiteralPath (Join-Path $workspaceRoot 'didanihaa.json') | ConvertFrom-Json
 if ($VitePort -in @($configuration.publicPort, $configuration.mediaPort)) { throw 'Vite and backend ports must be different.' }
 $node = (Get-Command node.exe -ErrorAction Stop).Source
-$logDirectory = Join-Path $workspaceRoot 'temp\dev'
+$logDirectory = Get-LauncherDirectory -Root $workspaceRoot -Mode Development
 New-Item -ItemType Directory -Force -Path $logDirectory | Out-Null
 $startupLock = $null
 try { $startupLock = [IO.File]::Open((Join-Path $logDirectory 'startup.lock'), 'OpenOrCreate', 'ReadWrite', 'None') }
 catch { throw 'Another Didanihaa startup is in progress. Try again after it finishes.' }
 
 $tracked = [Collections.Generic.List[object]]::new()
-foreach ($record in @(Get-DevelopmentState -Root $workspaceRoot)) {
-    if ($null -ne (Get-TrackedDevelopmentProcess -Record $record)) { $tracked.Add($record) }
-}
 $controlUrl = 'http://localhost:{0}' -f $configuration.publicPort
 $mediaUrl = 'http://localhost:{0}' -f $configuration.mediaPort
 $viteUrl = 'http://127.0.0.1:{0}' -f $VitePort
 $expectedControlRoot = $workspaceRoot
 if ($WebOnly) {
-    $activeSession = Get-DevelopmentJson ($controlUrl + '/admin/api/session')
+    $activeSession = Get-LocalJson ($controlUrl + '/admin/api/session')
     $allowedRoots = @($workspaceRoot, (Join-Path $workspaceRoot 'publish'))
     if ($null -eq $activeSession -or $activeSession.root -notin $allowedRoots) {
         throw 'WebOnly needs this workspace or its published Control already running. Start tools\Start-Didanihaa.ps1 first.'
@@ -35,18 +32,18 @@ if ($WebOnly) {
 }
 
 function Test-ControlReady {
-    $session = Get-DevelopmentJson ($controlUrl + '/admin/api/session')
+    $session = Get-LocalJson ($controlUrl + '/admin/api/session')
     return $null -ne $session -and $session.root -eq $expectedControlRoot
 }
 function Test-MediaReady {
-    $health = Get-DevelopmentJson ($mediaUrl + '/health')
+    $health = Get-LocalJson ($mediaUrl + '/health')
     return $null -ne $health -and $health.service -eq 'Didanihaa.Media' -and $health.catalogReady
 }
 function Test-ViteReady {
     try {
         $page = Invoke-WebRequest -Uri ($viteUrl + '/admin/') -UseBasicParsing -TimeoutSec 2
         $css = Invoke-WebRequest -Uri ($viteUrl + '/admin/admin.css?direct') -UseBasicParsing -TimeoutSec 2
-        $session = Get-DevelopmentJson ($viteUrl + '/admin/api/session')
+        $session = Get-LocalJson ($viteUrl + '/admin/api/session')
         return $page.StatusCode -eq 200 -and $css.StatusCode -eq 200 -and
             ($css.Headers['Content-Type'] -join ';') -like 'text/css*' -and $session.root -eq $expectedControlRoot
     } catch { return $false }
@@ -58,7 +55,7 @@ function Start-DevelopmentProcess {
     $startedProcess = Start-Process -FilePath $Executable -ArgumentList $Arguments -WorkingDirectory $WorkingDirectory -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     $startedProcess.Refresh()
     $tracked.Add([PSCustomObject]@{ role = $Role; id = $startedProcess.Id; executable = [IO.Path]::GetFullPath($Executable); startedUtc = $startedProcess.StartTime.ToUniversalTime().ToString('O') })
-    Save-DevelopmentState -Root $workspaceRoot -Processes $tracked.ToArray()
+    Save-LauncherState -Root $workspaceRoot -Mode Development -Processes $tracked.ToArray()
     return $startedProcess
 }
 function Wait-DevelopmentReady {
@@ -76,6 +73,9 @@ function Wait-DevelopmentReady {
 }
 
 try {
+    foreach ($record in @(Get-LauncherState -Root $workspaceRoot -Mode Development)) {
+        if ($null -ne (Get-TrackedProcess -Record $record)) { $tracked.Add($record) }
+    }
     $controlReady = Test-ControlReady
     $mediaReady = Test-MediaReady
     if ($WebOnly -and (-not $controlReady -or -not $mediaReady)) { throw 'WebOnly requires both existing backend processes to be ready.' }
@@ -106,5 +106,5 @@ try {
     Write-Output ('TV preview: ' + $viteUrl + '/tv/')
     Write-Output ('Logs: ' + $logDirectory)
     Write-Output 'Stop script-owned servers with tools\Stop-Dev.ps1.'
-    if (-not $NoBrowser) { Open-DevelopmentBrowser -Uri ($viteUrl + '/admin/') }
+    if (-not $NoBrowser) { Open-DefaultBrowser -Uri ($viteUrl + '/admin/') }
 } finally { if ($null -ne $startupLock) { $startupLock.Dispose() } }

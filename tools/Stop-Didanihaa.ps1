@@ -5,8 +5,8 @@ $ErrorActionPreference = 'Stop'
 $runtimeRoot = Get-PublishedRuntimeRoot
 $remaining = [Collections.Generic.List[object]]::new()
 foreach ($role in @('Media', 'Control')) {
-    foreach ($record in @(Get-DevelopmentState -Root $runtimeRoot) | Where-Object role -eq $role) {
-        $trackedProcess = Get-TrackedDevelopmentProcess -Record $record
+    foreach ($record in @(Get-LauncherState -Root $runtimeRoot -Mode Runtime) | Where-Object role -eq $role) {
+        $trackedProcess = Get-TrackedProcess -Record $record
         if ($null -eq $trackedProcess) { continue }
         try {
             Stop-Process -Id $trackedProcess.Id -ErrorAction Stop
@@ -15,5 +15,5 @@ foreach ($role in @('Media', 'Control')) {
         } catch { $remaining.Add($record); Write-Warning $_.Exception.Message }
     }
 }
-Save-DevelopmentState -Root $runtimeRoot -Processes $remaining.ToArray()
+Save-LauncherState -Root $runtimeRoot -Mode Runtime -Processes $remaining.ToArray()
 Write-Output 'Only launcher-owned processes were targeted. A registered Windows Service is controlled from its dashboard.'

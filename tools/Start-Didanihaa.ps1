@@ -13,25 +13,22 @@ foreach ($requiredFile in @($controlExecutable, $mediaExecutable, $adminPage)) {
 }
 $controlUrl = 'http://localhost:{0}' -f $configuration.publicPort
 $mediaUrl = 'http://localhost:{0}' -f $configuration.mediaPort
-$logDirectory = Join-Path $runtimeRoot 'temp\dev'
+$logDirectory = Get-LauncherDirectory -Root $runtimeRoot -Mode Runtime
 New-Item -ItemType Directory -Force -Path $logDirectory | Out-Null
 $startupLock = $null
 try { $startupLock = [IO.File]::Open((Join-Path $logDirectory 'startup.lock'), 'OpenOrCreate', 'ReadWrite', 'None') }
 catch { throw 'Another startup is in progress. Try again after it finishes.' }
 $tracked = [Collections.Generic.List[object]]::new()
-foreach ($record in @(Get-DevelopmentState -Root $runtimeRoot)) {
-    if ($null -ne (Get-TrackedDevelopmentProcess -Record $record)) { $tracked.Add($record) }
-}
 
 function Start-PublishedProcess {
     param([string]$Role, [string]$Executable, [string]$ReadyUrl)
     $process = Start-Process -FilePath $Executable -ArgumentList @('--root', ('"{0}"' -f $runtimeRoot)) -WorkingDirectory $runtimeRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $logDirectory ($Role + '.out.log')) -RedirectStandardError (Join-Path $logDirectory ($Role + '.err.log'))
     $process.Refresh()
     $tracked.Add([PSCustomObject]@{ role = $Role; id = $process.Id; executable = [IO.Path]::GetFullPath($Executable); startedUtc = $process.StartTime.ToUniversalTime().ToString('O') })
-    Save-DevelopmentState -Root $runtimeRoot -Processes $tracked.ToArray()
+    Save-LauncherState -Root $runtimeRoot -Mode Runtime -Processes $tracked.ToArray()
     $deadline = [DateTime]::UtcNow.AddSeconds(40)
     do {
-        $response = Get-DevelopmentJson $ReadyUrl
+        $response = Get-LocalJson $ReadyUrl
         if ($null -ne $response) {
             if (($Role -eq 'Control' -and $response.root -eq $runtimeRoot) -or
                 ($Role -eq 'Media' -and $response.service -eq 'Didanihaa.Media' -and $response.catalogReady)) {
@@ -46,7 +43,11 @@ function Start-PublishedProcess {
 }
 
 try {
-    $session = Get-DevelopmentJson ($controlUrl + '/admin/api/session')
+    foreach ($record in @(Get-LauncherState -Root $runtimeRoot -Mode Runtime)) {
+        if ($null -ne (Get-TrackedProcess -Record $record)) { $tracked.Add($record) }
+    }
+    Save-LauncherState -Root $runtimeRoot -Mode Runtime -Processes $tracked.ToArray()
+    $session = Get-LocalJson ($controlUrl + '/admin/api/session')
     if ($null -ne $session -and $session.root -ne $runtimeRoot) {
         throw 'Control belongs to another runtime root. Stop development servers before starting the published site.'
     }
@@ -55,8 +56,8 @@ try {
         Start-PublishedProcess -Role 'Control' -Executable $controlExecutable -ReadyUrl ($controlUrl + '/admin/api/session')
     } else { Write-Output 'Reusing the running Control instance.' }
 
-    $health = Get-DevelopmentJson ($mediaUrl + '/health')
-    $status = Get-DevelopmentJson ($controlUrl + '/admin/api/status')
+    $health = Get-LocalJson ($mediaUrl + '/health')
+    $status = Get-LocalJson ($controlUrl + '/admin/api/status')
     if ($null -ne $health -and $health.service -eq 'Didanihaa.Media' -and $health.catalogReady) {
         Write-Output 'Reusing the running Media instance.'
     } elseif ($status.service.installed) {
@@ -73,12 +74,12 @@ try {
         $css = Invoke-WebRequest -Uri ($controlUrl + $stylesheetPath) -TimeoutSec 5 -UseBasicParsing
         if ($css.StatusCode -ne 200 -or ($css.Headers['Content-Type'] -join ';') -notlike 'text/css*') { throw 'The dashboard stylesheet could not be loaded.' }
     }
-    $session = Get-DevelopmentJson ($controlUrl + '/admin/api/session')
+    $session = Get-LocalJson ($controlUrl + '/admin/api/session')
     $siteUrl = if (@($session.viewerUrls).Count -gt 0) { ([Uri]$session.viewerUrls[0]).GetLeftPart([UriPartial]::Authority) } else { $controlUrl }
     Write-Output ('Dashboard: ' + $siteUrl + '/admin/')
     Write-Output ('TV: ' + $siteUrl + '/tv/')
     Write-Output ('Local dashboard: ' + $controlUrl + '/admin/')
     Write-Output ('Logs: ' + $logDirectory)
     Write-Output 'This command runs the existing published output; it does not build or install a Windows Service.'
-    if (-not $NoBrowser) { Open-DevelopmentBrowser -Uri ($siteUrl + '/admin/') }
+    if (-not $NoBrowser) { Open-DefaultBrowser -Uri ($siteUrl + '/admin/') }
 } finally { if ($null -ne $startupLock) { $startupLock.Dispose() } }
