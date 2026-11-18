@@ -2,6 +2,7 @@ using System.Text.Json;
 using Didanihaa.Core;
 using Didanihaa.Infrastructure;
 using Didanihaa.Platform.Windows;
+using Didanihaa.Tests.Fixtures;
 using Microsoft.Data.Sqlite;
 using Xunit;
 
@@ -9,7 +10,7 @@ namespace Didanihaa.Tests;
 
 public sealed class CatalogTests : IDisposable
 {
-    private readonly string testParent;
+    private readonly TestWorkspace workspace;
     private readonly string root;
     private readonly RuntimeLayout layout;
     private readonly CatalogRepository repository;
@@ -17,9 +18,8 @@ public sealed class CatalogTests : IDisposable
 
     public CatalogTests()
     {
-        var workspace = RuntimeLayout.Load([]).Root;
-        testParent = Path.Combine(workspace, "temp", "tests");
-        root = Path.Combine(testParent, Guid.NewGuid().ToString("N"));
+        workspace = new();
+        root = workspace.Root;
         mediaPath = Path.Combine(root, "Media");
         Directory.CreateDirectory(mediaPath);
         layout = new(root, new RuntimeConfiguration());
@@ -389,7 +389,6 @@ public sealed class CatalogTests : IDisposable
     public void Dispose()
     {
         SqliteConnection.ClearAllPools();
-        if (!PathSafety.IsWithin(testParent, root) || PathSafety.SamePath(testParent, root)) throw new InvalidOperationException("Unsafe test cleanup target.");
-        if (Directory.Exists(root)) Directory.Delete(root, true);
+        workspace.Dispose();
     }
 }
