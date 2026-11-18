@@ -32,7 +32,7 @@ internal sealed class ProcessLedger(string root)
         if (!File.Exists(path)) return [];
         var state = JsonSerializer.Deserialize<State>(File.ReadAllText(path), Json);
         if (state is null || string.IsNullOrEmpty(state.Root) || state.Processes is null || state.Mode is not (null or "Runtime"))
-            throw new InvalidOperationException("فایل وضعیت اجرا معتبر نیست. temp/runtime/processes.json را بررسی کن.");
+            throw new LauncherException("Invalid process state. Check temp/runtime/processes.json.");
         // A copied portable folder never inherits ownership of the original's processes.
         return PathSafety.SamePath(state.Root, root) ? state.Processes.Where(process => process.IsRunning()).ToList() : [];
     }
