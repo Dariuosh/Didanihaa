@@ -3,6 +3,7 @@ using Didanihaa.Infrastructure;
 using Microsoft.Extensions.FileProviders;
 
 var layout = RuntimeLayout.Load(args);
+using var instance = RuntimeInstance.Acquire(layout, RuntimeRole.Media);
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = [], ContentRootPath = layout.Root });
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -17,9 +18,11 @@ app.Use(async (context, next) =>
 {
     context.Response.Headers.XContentTypeOptions = "nosniff";
     context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; frame-ancestors 'none'";
-    if (context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/media"))
+    if (context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/media") || context.Request.Path == "/health")
     {
         context.Response.Headers.CacheControl = "no-store";
+        if (context.Request.Headers[RuntimeInstance.RequestHeader] != instance.Identity.InstanceId)
+        { context.Response.StatusCode = 503; await context.Response.WriteAsJsonAsync(new { error = "نمونهٔ سرویس پخش تغییر کرده است؛ دوباره تلاش کنید." }); return; }
         if (!File.Exists(layout.DatabasePath))
         { context.Response.StatusCode = 503; await context.Response.WriteAsJsonAsync(new { error = "کاتالوگ هنوز آماده نیست؛ پنل مدیریت را اجرا کنید." }); return; }
     }
@@ -40,6 +43,10 @@ app.MapGet("/tv/", () => File.Exists(Path.Combine(layout.WebPath, "tv/index.html
     ? Results.File(Path.Combine(layout.WebPath, "tv/index.html"), "text/html; charset=utf-8")
     : Results.Problem("ابتدا رابط وب را با npm run build بسازید.", statusCode: 503));
 app.MapGet("/health", () => Results.Ok(new { service = "Didanihaa.Media", catalogReady = File.Exists(layout.DatabasePath), mode = "original-files" }));
+// This endpoint is deliberately absent from Control's public forwarding routes.
+app.MapGet("/_internal/runtime", (HttpContext context) =>
+    context.Connection.RemoteIpAddress is { } remote && System.Net.IPAddress.IsLoopback(remote.IsIPv4MappedToIPv6 ? remote.MapToIPv4() : remote)
+        ? Results.Ok(new RuntimeStatus(instance.Identity, File.Exists(layout.DatabasePath))) : Results.NotFound());
 app.MapGet("/api/catalog", (HttpRequest request, CatalogRepository repository) =>
 {
     var offset = int.TryParse(request.Query["offset"], out var start) ? start : 0;

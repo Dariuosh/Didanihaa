@@ -83,6 +83,51 @@ try {
     $wrongPath = [PSCustomObject]@{ role = 'Control'; id = $currentProcess.Id; executable = (Join-Path $fixtureRoot 'other.exe'); startedUtc = $controlRecord.startedUtc }
     Assert-LauncherCheck ($null -eq (Get-TrackedProcess -Record $wrongPath)) 'Matching PID and start time must not accept a different executable.'
 
+    $identityRoot = Join-Path $fixtureRoot 'هویت اجرا با فاصله'
+    $identityDirectory = Get-LauncherDirectory -Root $identityRoot -Mode Runtime
+    [IO.Directory]::CreateDirectory($identityDirectory) | Out-Null
+    $identity = [PSCustomObject]@{
+        protocol = 1; rootId = (Get-RuntimeRootId -Root $identityRoot); instanceId = [Guid]::NewGuid().ToString('N')
+        role = 'Media'; processId = $currentProcess.Id; executablePath = $currentProcess.Path; startedUtc = $controlRecord.startedUtc
+    }
+    $descriptorPath = Join-Path $identityDirectory 'media.identity.json'
+    Write-AtomicRuntimeText -Path $descriptorPath -Text ($identity | ConvertTo-Json) -Overwrite
+    Assert-LauncherCheck (Test-RuntimeIdentity -Identity $identity -Root $identityRoot -Role Media -Executable $currentProcess.Path) 'A current identity must match its root, role, descriptor, executable and process start.'
+    $mediaResponse = [PSCustomObject]@{ identity = $identity; catalogReady = $true }
+    Assert-LauncherCheck (Test-BackendResponse -Response $mediaResponse -Root $identityRoot -Role Media -Executable $currentProcess.Path -ExpectedProcessId $currentProcess.Id) 'A fresh Media start must prove the started PID.'
+    Assert-LauncherCheck (-not (Test-BackendResponse -Response $mediaResponse -Root $identityRoot -Role Media -Executable $currentProcess.Path -ExpectedProcessId ([int]::MaxValue))) 'A different ready process must not satisfy a fresh start.'
+    Assert-LauncherCheck (-not (Test-BackendResponse -Response ([PSCustomObject]@{ service = 'Didanihaa.Media'; catalogReady = $true }) -Root $identityRoot -Role Media -Executable $currentProcess.Path)) 'Legacy health alone must not prove ownership.'
+    Assert-LauncherCheck (-not (Test-RuntimeIdentity -Identity $identity -Root $freshRoot -Role Media -Executable $currentProcess.Path)) 'A different root must not reuse the same response.'
+    Assert-LauncherCheck (-not (Test-RuntimeIdentity -Identity $identity -Root $identityRoot -Role Control -Executable $currentProcess.Path)) 'A different role must not reuse the same response.'
+    Assert-LauncherCheck (-not (Test-RuntimeIdentity -Identity $identity -Root $identityRoot -Role Media -Executable (Join-Path $identityRoot 'other.exe'))) 'A different executable must not be accepted.'
+    $mediaResponse.catalogReady = $false
+    Assert-LauncherCheck (-not (Test-BackendResponse -Response $mediaResponse -Root $identityRoot -Role Media -Executable $currentProcess.Path)) 'Identity alone must not mean the catalog is ready.'
+    $identity.instanceId = [Guid]::NewGuid().ToString('N')
+    Assert-LauncherCheck (-not (Test-RuntimeIdentity -Identity $identity -Root $identityRoot -Role Media -Executable $currentProcess.Path)) 'A stale response must not match a new descriptor.'
+    $identity.startedUtc = $currentProcess.StartTime.ToUniversalTime().AddSeconds(-5).ToString('O')
+    Write-AtomicRuntimeText -Path $descriptorPath -Text ($identity | ConvertTo-Json) -Overwrite
+    Assert-LauncherCheck (-not (Test-RuntimeIdentity -Identity $identity -Root $identityRoot -Role Media -Executable $currentProcess.Path)) 'A matching descriptor must not bypass the real process start time.'
+
+    $lockPath = Join-Path $identityDirectory 'startup.lock'
+    $firstLock = Open-RuntimeFileLock -Path $lockPath
+    try { Assert-StateRejected { Open-RuntimeFileLock -Path $lockPath } 'Concurrent launcher operations must be serialized.' }
+    finally { $firstLock.Dispose() }
+    $nextLock = Open-RuntimeFileLock -Path $lockPath
+    $nextLock.Dispose()
+    Assert-LauncherCheck ($true) 'Releasing the lock must allow the next operation.'
+
+    $exampleRoot = Join-Path $fixtureRoot 'configuration'
+    [IO.Directory]::CreateDirectory($exampleRoot) | Out-Null
+    $examplePath = Join-Path $exampleRoot 'didanihaa.example.json'
+    [IO.File]::WriteAllText($examplePath, '{"publicPort":24510,"futureSetting":true}')
+    Initialize-LocalConfiguration -Root $exampleRoot
+    [IO.File]::WriteAllText($examplePath, '{"publicPort":24511}')
+    Initialize-LocalConfiguration -Root $exampleRoot
+    $actualSettings = Get-Content -Raw -LiteralPath (Join-Path $exampleRoot 'didanihaa.json') | ConvertFrom-Json
+    Assert-LauncherCheck ($actualSettings.publicPort -eq 24510 -and $actualSettings.futureSetting) 'Configuration initialization must preserve an existing file and unknown settings.'
+    Assert-StateRejected { Resolve-OwnedRuntimePath -Root $exampleRoot -RelativePath '..\outside.exe' } 'Binary paths must stay within their runtime root.'
+    Assert-LauncherCheck ((Get-RuntimeRootId -Root $identityRoot) -ceq (Get-RuntimeRootId -Root (Join-Path $identityRoot '.'))) 'Root identity must ignore redundant path segments.'
+
     Write-Output ('Launcher state checks passed: ' + $script:assertionCount + ' assertions.')
 } finally {
     $cleanupTarget = [IO.Path]::GetFullPath($fixtureRoot)

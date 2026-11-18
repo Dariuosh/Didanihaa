@@ -6,7 +6,7 @@ $runtimeRoot = Get-PublishedRuntimeRoot
 Initialize-LocalConfiguration -Root $runtimeRoot
 $configuration = Get-Content -Raw -LiteralPath (Join-Path $runtimeRoot 'didanihaa.json') | ConvertFrom-Json
 $controlExecutable = Join-Path $runtimeRoot 'apps\control\Didanihaa.Control.exe'
-$mediaExecutable = Join-Path $runtimeRoot 'apps\host\Didanihaa.Host.exe'
+$mediaExecutable = Resolve-OwnedRuntimePath -Root $runtimeRoot -RelativePath $configuration.hostExecutable
 $adminPage = Join-Path $runtimeRoot 'web\admin\index.html'
 foreach ($requiredFile in @($controlExecutable, $mediaExecutable, $adminPage)) {
     if (-not (Test-Path -LiteralPath $requiredFile)) { throw ('Published file is missing: ' + $requiredFile + '. Build-publish the application first.') }
@@ -15,9 +15,6 @@ $controlUrl = 'http://localhost:{0}' -f $configuration.publicPort
 $mediaUrl = 'http://localhost:{0}' -f $configuration.mediaPort
 $logDirectory = Get-LauncherDirectory -Root $runtimeRoot -Mode Runtime
 New-Item -ItemType Directory -Force -Path $logDirectory | Out-Null
-$startupLock = $null
-try { $startupLock = [IO.File]::Open((Join-Path $logDirectory 'startup.lock'), 'OpenOrCreate', 'ReadWrite', 'None') }
-catch { throw 'Another startup is in progress. Try again after it finishes.' }
 $tracked = [Collections.Generic.List[object]]::new()
 
 function Start-PublishedProcess {
@@ -29,11 +26,8 @@ function Start-PublishedProcess {
     $deadline = [DateTime]::UtcNow.AddSeconds(40)
     do {
         $response = Get-LocalJson $ReadyUrl
-        if ($null -ne $response) {
-            if (($Role -eq 'Control' -and $response.root -eq $runtimeRoot) -or
-                ($Role -eq 'Media' -and $response.service -eq 'Didanihaa.Media' -and $response.catalogReady)) {
-                Write-Output ($Role + ' is ready.'); return
-            }
+        if (Test-BackendResponse -Response $response -Root $runtimeRoot -Role $Role -Executable $Executable -ExpectedProcessId $process.Id) {
+            Write-Output ($Role + ' is ready.'); return
         }
         $process.Refresh()
         if ($process.HasExited) { break }
@@ -42,29 +36,32 @@ function Start-PublishedProcess {
     throw ($Role + ' did not become ready. See ' + $logDirectory + '. Stop the partial startup before retrying.')
 }
 
+$startupLock = Open-RuntimeFileLock -Path (Join-Path $logDirectory 'startup.lock') -TimeoutMilliseconds 2000
 try {
     foreach ($record in @(Get-LauncherState -Root $runtimeRoot -Mode Runtime)) {
         if ($null -ne (Get-TrackedProcess -Record $record)) { $tracked.Add($record) }
     }
     Save-LauncherState -Root $runtimeRoot -Mode Runtime -Processes $tracked.ToArray()
     $session = Get-LocalJson ($controlUrl + '/admin/api/session')
-    if ($null -ne $session -and $session.root -ne $runtimeRoot) {
-        throw 'Control belongs to another runtime root. Stop development servers before starting the published site.'
+    if ($null -ne $session -and -not (Test-BackendResponse -Response $session -Root $runtimeRoot -Role Control -Executable $controlExecutable)) {
+        throw 'The running Control identity does not match this installation or is from an older version. Stop that instance before updating; it was not reused.'
     }
     if ($null -eq $session) {
         if (Test-LocalPort $configuration.publicPort) { throw ('Control port is occupied: ' + $configuration.publicPort) }
         Start-PublishedProcess -Role 'Control' -Executable $controlExecutable -ReadyUrl ($controlUrl + '/admin/api/session')
     } else { Write-Output 'Reusing the running Control instance.' }
 
-    $health = Get-LocalJson ($mediaUrl + '/health')
+    $health = Get-LocalJson ($mediaUrl + '/_internal/runtime')
     $status = Get-LocalJson ($controlUrl + '/admin/api/status')
-    if ($null -ne $health -and $health.service -eq 'Didanihaa.Media' -and $health.catalogReady) {
+    if (Test-BackendResponse -Response $health -Root $runtimeRoot -Role Media -Executable $mediaExecutable) {
         Write-Output 'Reusing the running Media instance.'
-    } elseif ($status.service.installed) {
+    } elseif (Test-LocalPort $configuration.mediaPort) {
+        throw 'The Media port is occupied by an instance whose identity could not be verified; it was not reused.'
+    } elseif ($status.service.installed -and $status.service.owned) {
         Write-Output 'Windows Service is installed. Start Media from the dashboard if it is stopped.'
     } else {
         if (Test-LocalPort $configuration.mediaPort) { throw ('Media port is occupied: ' + $configuration.mediaPort) }
-        Start-PublishedProcess -Role 'Media' -Executable $mediaExecutable -ReadyUrl ($mediaUrl + '/health')
+        Start-PublishedProcess -Role 'Media' -Executable $mediaExecutable -ReadyUrl ($mediaUrl + '/_internal/runtime')
     }
     $page = Invoke-WebRequest -Uri ($controlUrl + '/admin/') -TimeoutSec 5 -UseBasicParsing
     if ($page.StatusCode -ne 200) { throw 'The dashboard page could not be loaded.' }

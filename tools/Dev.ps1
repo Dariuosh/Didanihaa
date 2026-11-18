@@ -13,15 +13,16 @@ if ($VitePort -in @($configuration.publicPort, $configuration.mediaPort)) { thro
 $node = (Get-Command node.exe -ErrorAction Stop).Source
 $logDirectory = Get-LauncherDirectory -Root $workspaceRoot -Mode Development
 New-Item -ItemType Directory -Force -Path $logDirectory | Out-Null
-$startupLock = $null
-try { $startupLock = [IO.File]::Open((Join-Path $logDirectory 'startup.lock'), 'OpenOrCreate', 'ReadWrite', 'None') }
-catch { throw 'Another Didanihaa startup is in progress. Try again after it finishes.' }
 
 $tracked = [Collections.Generic.List[object]]::new()
 $controlUrl = 'http://localhost:{0}' -f $configuration.publicPort
 $mediaUrl = 'http://localhost:{0}' -f $configuration.mediaPort
 $viteUrl = 'http://127.0.0.1:{0}' -f $VitePort
 $expectedControlRoot = $workspaceRoot
+$controlExecutable = Join-Path $workspaceRoot 'src\Didanihaa.Control\bin\Debug\net11.0\Didanihaa.Control.exe'
+$mediaExecutable = Join-Path $workspaceRoot 'src\Didanihaa.Media\bin\Debug\net11.0\Didanihaa.Host.exe'
+$expectedControlExecutable = $controlExecutable
+$expectedMediaExecutable = $mediaExecutable
 if ($WebOnly) {
     $activeSession = Get-LocalJson ($controlUrl + '/admin/api/session')
     $allowedRoots = @($workspaceRoot, (Join-Path $workspaceRoot 'publish'))
@@ -29,15 +30,22 @@ if ($WebOnly) {
         throw 'WebOnly needs this workspace or its published Control already running. Start tools\Start-Didanihaa.ps1 first.'
     }
     $expectedControlRoot = $activeSession.root
+    if ($expectedControlRoot -ne $workspaceRoot) {
+        $publishedConfiguration = Get-Content -Raw -LiteralPath (Join-Path $expectedControlRoot 'didanihaa.json') | ConvertFrom-Json
+        $expectedControlExecutable = Join-Path $expectedControlRoot 'apps\control\Didanihaa.Control.exe'
+        $expectedMediaExecutable = Resolve-OwnedRuntimePath -Root $expectedControlRoot -RelativePath $publishedConfiguration.hostExecutable
+    }
 }
 
 function Test-ControlReady {
+    param([int]$ExpectedProcessId = 0)
     $session = Get-LocalJson ($controlUrl + '/admin/api/session')
-    return $null -ne $session -and $session.root -eq $expectedControlRoot
+    return Test-BackendResponse -Response $session -Root $expectedControlRoot -Role Control -Executable $expectedControlExecutable -ExpectedProcessId $ExpectedProcessId
 }
 function Test-MediaReady {
-    $health = Get-LocalJson ($mediaUrl + '/health')
-    return $null -ne $health -and $health.service -eq 'Didanihaa.Media' -and $health.catalogReady
+    param([int]$ExpectedProcessId = 0)
+    $health = Get-LocalJson ($mediaUrl + '/_internal/runtime')
+    return Test-BackendResponse -Response $health -Root $expectedControlRoot -Role Media -Executable $expectedMediaExecutable -ExpectedProcessId $ExpectedProcessId
 }
 function Test-ViteReady {
     try {
@@ -45,7 +53,8 @@ function Test-ViteReady {
         $css = Invoke-WebRequest -Uri ($viteUrl + '/admin/admin.css?direct') -UseBasicParsing -TimeoutSec 2
         $session = Get-LocalJson ($viteUrl + '/admin/api/session')
         return $page.StatusCode -eq 200 -and $css.StatusCode -eq 200 -and
-            ($css.Headers['Content-Type'] -join ';') -like 'text/css*' -and $session.root -eq $expectedControlRoot
+            ($css.Headers['Content-Type'] -join ';') -like 'text/css*' -and
+            (Test-BackendResponse -Response $session -Root $expectedControlRoot -Role Control -Executable $expectedControlExecutable)
     } catch { return $false }
 }
 function Start-DevelopmentProcess {
@@ -72,15 +81,14 @@ function Wait-DevelopmentReady {
     throw ($Role + ' did not become ready. See logs in ' + $logDirectory + '. Run tools\Stop-Dev.ps1 before retrying.')
 }
 
+$startupLock = Open-RuntimeFileLock -Path (Join-Path $logDirectory 'startup.lock') -TimeoutMilliseconds 2000
 try {
     foreach ($record in @(Get-LauncherState -Root $workspaceRoot -Mode Development)) {
         if ($null -ne (Get-TrackedProcess -Record $record)) { $tracked.Add($record) }
     }
     $controlReady = Test-ControlReady
     $mediaReady = Test-MediaReady
-    if ($WebOnly -and (-not $controlReady -or -not $mediaReady)) { throw 'WebOnly requires both existing backend processes to be ready.' }
-    $controlExecutable = Join-Path $workspaceRoot 'src\Didanihaa.Control\bin\Debug\net11.0\Didanihaa.Control.exe'
-    $mediaExecutable = Join-Path $workspaceRoot 'src\Didanihaa.Media\bin\Debug\net11.0\Didanihaa.Host.exe'
+    if ($WebOnly -and (-not $controlReady -or -not $mediaReady)) { throw 'WebOnly requires ready backends with matching runtime identities. Update older published backends before using this preview.' }
     $webRoot = Join-Path $workspaceRoot 'src\Didanihaa.WebUI'
     $viteEntry = Join-Path $webRoot 'node_modules\vite\bin\vite.js'
     $outputsReady = (Test-Path -LiteralPath $controlExecutable) -and (Test-Path -LiteralPath $mediaExecutable) -and
@@ -90,12 +98,12 @@ try {
     if (-not $controlReady) {
         if (Test-LocalPort $configuration.publicPort) { throw ('Control port is occupied by another instance: ' + $configuration.publicPort) }
         $controlProcess = Start-DevelopmentProcess -Role 'Control' -Executable $controlExecutable -Arguments @('--root', ('"{0}"' -f $workspaceRoot)) -WorkingDirectory $workspaceRoot
-        Wait-DevelopmentReady -Role 'Control' -Check { Test-ControlReady } -Process $controlProcess
+        Wait-DevelopmentReady -Role 'Control' -Check { Test-ControlReady -ExpectedProcessId $controlProcess.Id } -Process $controlProcess
     } else { Write-Output 'Reusing the running Control instance.' }
     if (-not $mediaReady) {
         if (Test-LocalPort $configuration.mediaPort) { throw ('Media port is occupied by another application: ' + $configuration.mediaPort) }
         $mediaProcess = Start-DevelopmentProcess -Role 'Media' -Executable $mediaExecutable -Arguments @('--root', ('"{0}"' -f $workspaceRoot)) -WorkingDirectory $workspaceRoot
-        Wait-DevelopmentReady -Role 'Media' -Check { Test-MediaReady } -Process $mediaProcess
+        Wait-DevelopmentReady -Role 'Media' -Check { Test-MediaReady -ExpectedProcessId $mediaProcess.Id } -Process $mediaProcess
     } else { Write-Output 'Reusing the running Media instance.' }
     if (-not (Test-ViteReady)) {
         if (Test-LocalPort $VitePort) { throw ('Vite port is occupied or its page/CSS/API is unhealthy: ' + $VitePort) }

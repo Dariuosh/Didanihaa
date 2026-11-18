@@ -14,6 +14,7 @@ var serviceManager = new WindowsServiceManager(layout);
 if (RuntimeLayout.Argument(args, "--service-action") is { } action)
     return await serviceManager.RunHelperAsync(action, RuntimeLayout.Argument(args, "--result") ?? "");
 
+using var instance = RuntimeInstance.Acquire(layout, RuntimeRole.Control);
 Directory.CreateDirectory(layout.TempPath);
 var repository = new CatalogRepository(layout);
 repository.Initialize();
@@ -28,7 +29,8 @@ builder.Services.AddSingleton<ThumbnailService>();
 builder.Services.AddSingleton<LibraryScanner>();
 builder.Services.AddHostedService<ScanWorker>();
 builder.Services.AddSingleton(serviceManager);
-builder.Services.AddSingleton(new HttpClient { Timeout = TimeSpan.FromSeconds(1) });
+builder.Services.AddSingleton(new HttpClient(new SocketsHttpHandler { UseProxy = false, AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(1) });
+builder.Services.AddSingleton<MediaRuntimeClient>();
 builder.Services.AddHttpForwarder();
 var app = builder.Build();
 using var mediaClient = new HttpMessageInvoker(new SocketsHttpHandler
@@ -87,8 +89,14 @@ app.MapGet("/tv/", () => File.Exists(Path.Combine(layout.WebPath, "tv/index.html
     : Results.Problem("ابتدا رابط وب را بسازید.", statusCode: 503));
 app.MapGet("/tv/simple", (HttpRequest request) => SimpleTvPage.Render(request, repository, new ProfileRepository(layout)));
 foreach (var path in new[] { "/api/catalog", "/api/viewer-folders", "/api/location/{id}", "/media/{id}", "/health" })
-    app.MapMethods(path, ["GET", "HEAD"], async (HttpContext context, IHttpForwarder forwarder) =>
+    app.MapMethods(path, ["GET", "HEAD"], async (HttpContext context, IHttpForwarder forwarder, MediaRuntimeClient runtimeClient) =>
     {
+        var peer = await runtimeClient.ReadReadyAsync(context.RequestAborted);
+        if (peer is null)
+        { context.Response.StatusCode = 503; await context.Response.WriteAsJsonAsync(new { error = "پخش این کتابخانه آماده نیست؛ وضعیت سرویس را بررسی کنید." }); return; }
+        // Replace any client-supplied value. The receiving instance checks it too,
+        // so a different process taking the port after this check cannot serve data.
+        context.Request.Headers[RuntimeInstance.RequestHeader] = peer.Identity.InstanceId;
         await forwarder.SendAsync(context, mediaDestination, mediaClient, forwarding, HttpTransformer.Default);
     });
 var management = app.MapGroup("/admin/api");
@@ -98,19 +106,21 @@ app.MapGet("/thumbnails/{id}", async (string id, HttpContext context, ThumbnailS
 management.MapGet("/thumbnails/{id}", async (string id, HttpContext context, ThumbnailService thumbnails) =>
     await Thumbnail(id, false, context, thumbnails));
 management.MapGet("/session", (MetadataProbe probe) => Results.Ok(new { token, root = layout.Root, metadataAvailable = probe.IsAvailable,
-    publicPort = layout.Configuration.PublicPort, viewerUrls = LanAccess.ViewerUrls(layout.Configuration.PublicPort) }));
+    publicPort = layout.Configuration.PublicPort, viewerUrls = LanAccess.ViewerUrls(layout.Configuration.PublicPort), runtime = instance.Identity }));
 management.MapGet("/settings", (MetadataProbe probe, ThumbnailService thumbnails) => Results.Ok(new
 { ffprobePath = layout.Configuration.FfprobePath, metadataAvailable = probe.IsAvailable, thumbnailsAvailable = thumbnails.IsAvailable }));
 management.MapPost("/settings", (ProbeSettingsRequest request, MetadataProbe probe) =>
 {
-    layout.SaveProbePath(request.FfprobePath);
-    return Results.Ok(new { ffprobePath = layout.Configuration.FfprobePath, metadataAvailable = probe.IsAvailable });
+    try
+    {
+        layout.SaveProbePath(request.FfprobePath);
+        return Results.Ok(new { ffprobePath = layout.Configuration.FfprobePath, metadataAvailable = probe.IsAvailable });
+    }
+    catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
 });
-management.MapGet("/status", async (WindowsServiceManager services, HttpClient client) =>
+management.MapGet("/status", async (WindowsServiceManager services, MediaRuntimeClient runtimeClient) =>
 {
-    var mediaOnline = false;
-    try { using var response = await client.GetAsync($"http://127.0.0.1:{layout.Configuration.MediaPort}/health"); mediaOnline = response.IsSuccessStatusCode; }
-    catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or SocketException) { }
+    var mediaOnline = await runtimeClient.ReadReadyAsync() is not null;
     return Results.Ok(new { statistics = repository.Statistics(), service = services.ReadState(), mediaOnline, jobs = repository.Jobs() });
 });
 management.MapGet("/sources", () => Results.Ok(repository.Sources()));
