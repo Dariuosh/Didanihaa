@@ -61,7 +61,10 @@ try {
     $projectXml = (Invoke-ReleaseGit -GitArguments @('show', ($commit + ':Directory.Build.props'))) -join "`n"
     $version = ([xml]$projectXml).Project.PropertyGroup.Version
     if ($version -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') { throw 'A semantic release Version is required in Directory.Build.props.' }
-    $packageJson = ((Invoke-ReleaseGit -GitArguments @('show', ($commit + ':src/Didanihaa.Web/package.json'))) -join "`n") | ConvertFrom-Json
+    $webProjectDirectory = 'src/Didanihaa.WebUI'
+    git cat-file -e ($commit + ':' + $webProjectDirectory + '/package.json') 2>$null
+    if ($LASTEXITCODE -ne 0) { $webProjectDirectory = 'src/Didanihaa.Web' }
+    $packageJson = ((Invoke-ReleaseGit -GitArguments @('show', ($commit + ':' + $webProjectDirectory + '/package.json'))) -join "`n") | ConvertFrom-Json
     if ($packageJson.version -ne $version) { throw '.NET and web package versions differ.' }
     $outputRoot = if ([IO.Path]::IsPathRooted($OutputDirectory)) { [IO.Path]::GetFullPath($OutputDirectory) }
         else { [IO.Path]::GetFullPath((Join-Path $workspaceRoot $OutputDirectory)) }
@@ -99,7 +102,7 @@ try {
     Push-Location -LiteralPath $sourceRoot
     try {
         & ./tools/Test-Publication.ps1 -Revision HEAD -CheckHistory
-        Push-Location -LiteralPath (Join-Path $sourceRoot 'src/Didanihaa.Web')
+        Push-Location -LiteralPath (Join-Path $sourceRoot $webProjectDirectory)
         try {
             npm ci --ignore-scripts --no-audit --no-fund --cache (Join-Path $workspaceRoot 'temp/npm-cache')
             if ($LASTEXITCODE -ne 0) { throw 'Frontend locked restore failed.' }

@@ -1,6 +1,6 @@
 # دیدنی‌ها · Didanihaa
 
-<img src="src/Didanihaa.Web/assets/brand/logomark.svg" alt="نشان دیدنی‌ها" width="72" height="72">
+<img src="src/Didanihaa.WebUI/assets/brand/logomark.svg" alt="نشان دیدنی‌ها" width="72" height="72">
 
 کتابخانهٔ شخصی صدا و ویدیو برای ویندوز و شبکهٔ محلی؛ فایل‌های دلخواهتان را از پوشه‌ها انتخاب کنید و با مرورگر تلویزیون، رایانه یا گوشی پخش کنید.
 
@@ -96,9 +96,9 @@ Vite فقط روی `127.0.0.1:5211` است و به gateway روی `13521` پرا
 | `src/Didanihaa.Core` | مدل‌ها، تنظیمات قابل حمل و قواعد مشترک |
 | `src/Didanihaa.Infrastructure` | SQLite، اسکن، metadata و thumbnail |
 | `src/Didanihaa.Control` | gateway شبکه، مدیریت و نوشتن کاتالوگ |
-| `src/Didanihaa.Host` | Media داخلی و streaming فایل منتشرشده |
+| `src/Didanihaa.Media` | Media داخلی و streaming فایل منتشرشده |
 | `src/Didanihaa.Platform.Windows` | Windows SCM و helper محدود UAC |
-| `src/Didanihaa.Web` | رابط مستقل admin و TV |
+| `src/Didanihaa.WebUI` | رابط مستقل admin و TV |
 | `tests/Didanihaa.Tests` | آزمون‌های C# |
 | `tools` | فرمان‌های عملیاتی PowerShell |
 | `docs/licenses` | متن مجوز وابستگی‌ها |

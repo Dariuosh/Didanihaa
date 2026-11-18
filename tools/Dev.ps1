@@ -5,7 +5,7 @@ param(
     [ValidateRange(1024, 65535)][int]$VitePort = 5211
 )
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot 'internal\Launcher.Common.ps1')
+. (Join-Path $PSScriptRoot 'internal\Runtime.Common.ps1')
 $workspaceRoot = Get-DevelopmentRoot
 Initialize-LocalConfiguration -Root $workspaceRoot
 $configuration = Get-Content -Raw -LiteralPath (Join-Path $workspaceRoot 'didanihaa.json') | ConvertFrom-Json
@@ -80,8 +80,8 @@ try {
     $mediaReady = Test-MediaReady
     if ($WebOnly -and (-not $controlReady -or -not $mediaReady)) { throw 'WebOnly requires both existing backend processes to be ready.' }
     $controlExecutable = Join-Path $workspaceRoot 'src\Didanihaa.Control\bin\Debug\net11.0\Didanihaa.Control.exe'
-    $mediaExecutable = Join-Path $workspaceRoot 'src\Didanihaa.Host\bin\Debug\net11.0\Didanihaa.Host.exe'
-    $webRoot = Join-Path $workspaceRoot 'src\Didanihaa.Web'
+    $mediaExecutable = Join-Path $workspaceRoot 'src\Didanihaa.Media\bin\Debug\net11.0\Didanihaa.Host.exe'
+    $webRoot = Join-Path $workspaceRoot 'src\Didanihaa.WebUI'
     $viteEntry = Join-Path $webRoot 'node_modules\vite\bin\vite.js'
     $outputsReady = (Test-Path -LiteralPath $controlExecutable) -and (Test-Path -LiteralPath $mediaExecutable) -and
         (Test-Path -LiteralPath $viteEntry) -and (Test-Path -LiteralPath (Join-Path $webRoot 'dist\admin\index.html'))

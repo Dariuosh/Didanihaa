@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param()
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot 'internal\Launcher.Common.ps1')
+. (Join-Path $PSScriptRoot 'internal\Runtime.Common.ps1')
 $runtimeRoot = Get-PublishedRuntimeRoot
 $remaining = [Collections.Generic.List[object]]::new()
 foreach ($role in @('Media', 'Control')) {

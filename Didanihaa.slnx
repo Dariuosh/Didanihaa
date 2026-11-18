@@ -1,10 +1,10 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Didanihaa.Core/Didanihaa.Core.csproj" />
-    <Project Path="src/Didanihaa.Web/Didanihaa.Web.csproj" />
+    <Project Path="src/Didanihaa.WebUI/Didanihaa.WebUI.csproj" />
     <Project Path="src/Didanihaa.Infrastructure/Didanihaa.Infrastructure.csproj" />
     <Project Path="src/Didanihaa.Platform.Windows/Didanihaa.Platform.Windows.csproj" />
-    <Project Path="src/Didanihaa.Host/Didanihaa.Host.csproj" />
+    <Project Path="src/Didanihaa.Media/Didanihaa.Media.csproj" />
     <Project Path="src/Didanihaa.Control/Didanihaa.Control.csproj" />
   </Folder>
   <Folder Name="/tests/">

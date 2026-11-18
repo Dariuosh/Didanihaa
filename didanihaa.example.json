@@ -4,6 +4,6 @@
   "tempDirectory": "temp/runtime",
   "ffprobePath": "tools/ffprobe.exe",
   "hostExecutable": "publish/apps/host/Didanihaa.Host.exe",
-  "webDirectory": "src/Didanihaa.Web/dist",
+  "webDirectory": "src/Didanihaa.WebUI/dist",
   "mediaPort": 13522
 }

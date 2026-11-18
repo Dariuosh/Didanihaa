@@ -1,4 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Didanihaa.Web</AssemblyName>
+    <RootNamespace>Didanihaa.Web</RootNamespace>
+  </PropertyGroup>
   <Target Name="RestoreFrontend" BeforeTargets="BuildFrontend" Condition="!Exists('node_modules/.package-lock.json')">
     <Exec Command="npm ci --cache &quot;$(MSBuildProjectDirectory)/../../temp/npm-cache&quot; --prefer-offline --no-audit --no-fund --ignore-scripts"
           WorkingDirectory="$(MSBuildProjectDirectory)" />

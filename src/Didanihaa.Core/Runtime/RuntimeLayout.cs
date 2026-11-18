@@ -10,7 +10,7 @@ public sealed record RuntimeConfiguration
     public string TempDirectory { get; init; } = "temp/runtime";
     public string FfprobePath { get; init; } = "tools/ffprobe.exe";
     public string HostExecutable { get; init; } = "publish/apps/host/Didanihaa.Host.exe";
-    public string WebDirectory { get; init; } = "src/Didanihaa.Web/dist";
+    public string WebDirectory { get; init; } = "src/Didanihaa.WebUI/dist";
 }
 
 public sealed class RuntimeLayout(string root, RuntimeConfiguration configuration)

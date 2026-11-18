@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: '26.x'
           cache: npm
-          cache-dependency-path: src/Didanihaa.Web/package-lock.json
+          cache-dependency-path: src/Didanihaa.WebUI/package-lock.json
       - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           global-json-file: global.json
@@ -54,7 +54,7 @@ jobs:
           & (Join-Path $directory 'gitleaks.exe') git . --log-opts=HEAD --redact=100 --no-banner
           if ($LASTEXITCODE -ne 0) { throw 'Secret scan failed.' }
       - name: Restore frontend
-        working-directory: src/Didanihaa.Web
+        working-directory: src/Didanihaa.WebUI
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Restore locked NuGet packages
         run: dotnet restore Didanihaa.slnx --locked-mode

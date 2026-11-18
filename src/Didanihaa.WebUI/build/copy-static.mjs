@@ -34,4 +34,4 @@ for (const [name, source] of [
 }
 const shimLicense = path.join(notices, '@lit-labs-ssr-dom-shim.LICENSE');
 await writeFile(shimLicense, 'Copyright 2019 Google LLC\n\n' + await readFile(shimLicense, 'utf8'));
-console.log('Didanihaa web assets built in src/Didanihaa.Web/dist.');
+console.log('Didanihaa web assets built in src/Didanihaa.WebUI/dist.');

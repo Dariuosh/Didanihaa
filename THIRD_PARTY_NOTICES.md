@@ -6,7 +6,7 @@ These components retain their own licenses independently of Didanihaa's source-c
 
 | Component | License | Notice location |
 | --- | --- | --- |
-| [Vazirmatn](https://github.com/rastikerdar/vazirmatn) | SIL Open Font License 1.1 | `src/Didanihaa.Web/assets/fonts/OFL.txt` |
+| [Vazirmatn](https://github.com/rastikerdar/vazirmatn) | SIL Open Font License 1.1 | `src/Didanihaa.WebUI/assets/fonts/OFL.txt` |
 | [Lit, lit-element, lit-html, @lit/reactive-element](https://github.com/lit/lit) | BSD-3-Clause | Their package LICENSE files, copied into `web/third-party/` in a published build |
 | [@lit-labs/ssr-dom-shim](https://github.com/lit/lit/tree/main/packages/labs/ssr-dom-shim) | BSD-3-Clause | Lit monorepo license, copied into `web/third-party/` |
 | [Vite](https://github.com/vitejs/vite) | MIT and bundled third-party notices | Package LICENSE.md, copied into `web/third-party/` |

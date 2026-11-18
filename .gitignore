@@ -39,7 +39,7 @@
 **/bin/
 **/obj/
 **/node_modules/
-/src/Didanihaa.Web/dist/
+/src/Didanihaa.WebUI/dist/
 **/TestResults/
 *.trx
 *.coverage

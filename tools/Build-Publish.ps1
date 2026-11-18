@@ -2,7 +2,7 @@
 param([switch]$FrameworkDependent, [switch]$NoRestore, [switch]$ContinuousIntegration)
 $ErrorActionPreference = 'Stop'
 $workspaceRoot = Split-Path -Parent $PSScriptRoot
-. (Join-Path $PSScriptRoot 'internal\Launcher.Common.ps1')
+. (Join-Path $PSScriptRoot 'internal\Runtime.Common.ps1')
 Initialize-LocalConfiguration -Root $workspaceRoot
 $publishRoot = Join-Path $workspaceRoot 'publish'
 $env:DOTNET_CLI_HOME = Join-Path $workspaceRoot 'temp\dotnet-home'
@@ -16,7 +16,7 @@ try {
         try { $_.Path.StartsWith($publishRoot + '\', [StringComparison]::OrdinalIgnoreCase) } catch { $false }
     })
     if ($loadedApplications.Count -gt 0) { throw 'Published applications are running. Stop them before Build-Publish; stop a registered Media service from the dashboard first.' }
-    foreach ($application in @(@('Didanihaa.Host','host'), @('Didanihaa.Control','control'))) {
+    foreach ($application in @(@('Didanihaa.Media','host'), @('Didanihaa.Control','control'))) {
         $projectPath = Join-Path $workspaceRoot ('src\{0}\{0}.csproj' -f $application[0])
         $arguments = @('publish', $projectPath, '-c', 'Release', '-r', 'win-x64', '--self-contained', $selfContained, '-p:RestoreLockedMode=true',
             '-o', (Join-Path $publishRoot ('apps\' + $application[1])))
@@ -26,7 +26,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw ('Publish failed: ' + $application[0]) }
     }
     New-Item -ItemType Directory -Force -Path (Join-Path $publishRoot 'web'), (Join-Path $publishRoot 'data'), (Join-Path $publishRoot 'temp'), (Join-Path $publishRoot 'tools') | Out-Null
-    Copy-Item -Path (Join-Path $workspaceRoot 'src\Didanihaa.Web\dist\*') -Destination (Join-Path $publishRoot 'web') -Recurse -Force
+    Copy-Item -Path (Join-Path $workspaceRoot 'src\Didanihaa.WebUI\dist\*') -Destination (Join-Path $publishRoot 'web') -Recurse -Force
     $configPath = Join-Path $publishRoot 'didanihaa.json'
     if (-not (Test-Path -LiteralPath $configPath)) {
         $configuration = Get-Content -Raw -LiteralPath (Join-Path $workspaceRoot 'didanihaa.json') | ConvertFrom-Json
@@ -36,7 +36,7 @@ try {
     }
     New-Item -ItemType Directory -Force -Path (Join-Path $publishRoot 'tools\internal') | Out-Null
     Copy-Item -LiteralPath (Join-Path $workspaceRoot 'tools\Start-Didanihaa.ps1'), (Join-Path $workspaceRoot 'tools\Stop-Didanihaa.ps1'), (Join-Path $workspaceRoot 'tools\Enable-LanAccess.ps1') -Destination (Join-Path $publishRoot 'tools') -Force
-    Copy-Item -LiteralPath (Join-Path $workspaceRoot 'tools\internal\Launcher.Common.ps1') -Destination (Join-Path $publishRoot 'tools\internal') -Force
+    Copy-Item -LiteralPath (Join-Path $workspaceRoot 'tools\internal\Runtime.Common.ps1') -Destination (Join-Path $publishRoot 'tools\internal') -Force
     foreach ($obsoleteLauncher in @('Start-Didanihaa.ps1','Stop-Didanihaa.ps1','Launcher.Common.ps1')) {
         $obsoletePath = Join-Path $publishRoot $obsoleteLauncher
         if (Test-Path -LiteralPath $obsoletePath) { Remove-Item -LiteralPath $obsoletePath }
@@ -51,7 +51,7 @@ try {
     Copy-Item -Path (Join-Path $workspaceRoot 'docs\licenses\*') -Destination $thirdPartyRoot -Force
     # NuGet packages and self-contained runtimes can carry additional notices.
     # Resolve the actual restored versions and package folders; never copy a machine path into the package.
-    foreach ($application in @('Didanihaa.Host', 'Didanihaa.Control')) {
+    foreach ($application in @('Didanihaa.Media', 'Didanihaa.Control')) {
         $assetsPath = Join-Path $workspaceRoot ('src\' + $application + '\obj\project.assets.json')
         $assets = Get-Content -Raw -LiteralPath $assetsPath | ConvertFrom-Json
         $packageKeys = @($assets.libraries.PSObject.Properties | Where-Object { $_.Value.type -eq 'package' } | ForEach-Object { $_.Name })

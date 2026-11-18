@@ -2,7 +2,7 @@
 param([switch]$NoRestore, [switch]$SkipTests)
 $ErrorActionPreference = 'Stop'
 $workspaceRoot = Split-Path -Parent $PSScriptRoot
-. (Join-Path $PSScriptRoot 'internal\Launcher.Common.ps1')
+. (Join-Path $PSScriptRoot 'internal\Runtime.Common.ps1')
 Initialize-LocalConfiguration -Root $workspaceRoot
 $env:DOTNET_CLI_HOME = Join-Path $workspaceRoot 'temp\dotnet-home'
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'

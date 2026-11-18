@@ -1,7 +1,7 @@
 [CmdletBinding(SupportsShouldProcess)]
 param([string]$InterfaceAlias)
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot 'internal\Launcher.Common.ps1')
+. (Join-Path $PSScriptRoot 'internal\Runtime.Common.ps1')
 $runtimeRoot = Get-PublishedRuntimeRoot
 $configurationPath = Join-Path $runtimeRoot 'didanihaa.json'
 if (-not (Test-Path -LiteralPath $configurationPath)) { $configurationPath = Join-Path $runtimeRoot 'didanihaa.example.json' }

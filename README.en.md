@@ -1,6 +1,6 @@
 # Didanihaa · دیدنی‌ها
 
-<img src="src/Didanihaa.Web/assets/brand/logomark.svg" alt="Didanihaa mark" width="72" height="72">
+<img src="src/Didanihaa.WebUI/assets/brand/logomark.svg" alt="Didanihaa mark" width="72" height="72">
 
 A portable Windows media library for your local network. Select files from your own folders and play them in a TV, desktop or mobile browser.
 
@@ -81,7 +81,7 @@ Local settings, catalogs, media, logs, caches and published output are excluded 
 
 The six application projects are under src/, C# tests under tests/, PowerShell operations under tools/ and dependency license texts under docs/licenses/.
 
-[Contributing](CONTRIBUTING.md) · [Tool guide](tools/README.md) · [Color tokens](src/Didanihaa.Web/admin/theme.css)
+[Contributing](CONTRIBUTING.md) · [Tool guide](tools/README.md) · [Color tokens](src/Didanihaa.WebUI/admin/theme.css)
 
 DLNA, Chromecast, transcoding/remuxing, selectable subtitles, scheduled scanning and filesystem watching are not implemented. Codec and playback-control support depend on the device and browser. Windows Service access to media depends on the service account's NTFS permissions.
 
