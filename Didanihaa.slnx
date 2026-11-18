@@ -6,6 +6,7 @@
     <Project Path="src/Didanihaa.Platform.Windows/Didanihaa.Platform.Windows.csproj" />
     <Project Path="src/Didanihaa.Media/Didanihaa.Media.csproj" />
     <Project Path="src/Didanihaa.Control/Didanihaa.Control.csproj" />
+    <Project Path="src/Didanihaa.Launcher/Didanihaa.Launcher.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Didanihaa.Tests/Didanihaa.Tests.csproj" />

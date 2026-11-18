@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Didanihaa.Core;
 
-internal static class RuntimeFile
+public static class RuntimeFile
 {
     public static FileStream Lock(string path, TimeSpan timeout)
     {

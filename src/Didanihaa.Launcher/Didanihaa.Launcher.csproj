@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net11.0-windows</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>Didanihaa</AssemblyName>
+    <RootNamespace>Didanihaa.Launcher</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Didanihaa.Core/Didanihaa.Core.csproj" />
+    <ProjectReference Include="../Didanihaa.Platform.Windows/Didanihaa.Platform.Windows.csproj" />
+  </ItemGroup>
+</Project>

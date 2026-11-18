@@ -65,11 +65,11 @@
       "didanihaa.infrastructure": {
         "type": "Project",
         "dependencies": {
-          "Didanihaa.Core": "[1.0.0, )",
+          "Didanihaa.Core": "[0.1.0, )",
           "Microsoft.Data.Sqlite": "[11.0.0, )"
         }
       },
-      "didanihaa.web": {
+      "Didanihaa.Web": {
         "type": "Project"
       },
       "Microsoft.Data.Sqlite": {
