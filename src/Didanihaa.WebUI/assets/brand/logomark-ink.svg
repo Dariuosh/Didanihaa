@@ -1,14 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none" role="img" aria-label="دیدنی‌ها">
-  <rect x="7" y="17" width="82" height="62" rx="10" fill="#634b52"/>
-  <rect x="19" y="21" width="58" height="54" rx="7" fill="#fff6f8"/>
+  <rect x="7" y="14" width="82" height="68" rx="10" fill="#634b52"/>
+  <rect x="12" y="27" width="72" height="42" rx="6" fill="#fff6f8"/>
   <g fill="#f5dfe5">
-    <rect x="10" y="25" width="7" height="9" rx="1.5"/>
-    <rect x="10" y="43.5" width="7" height="9" rx="1.5"/>
-    <rect x="10" y="62" width="7" height="9" rx="1.5"/>
-    <rect x="79" y="25" width="7" height="9" rx="1.5"/>
-    <rect x="79" y="43.5" width="7" height="9" rx="1.5"/>
-    <rect x="79" y="62" width="7" height="9" rx="1.5"/>
+    <rect x="17" y="18.5" width="11" height="6" rx="1.5"/>
+    <rect x="34" y="18.5" width="11" height="6" rx="1.5"/>
+    <rect x="51" y="18.5" width="11" height="6" rx="1.5"/>
+    <rect x="68" y="18.5" width="11" height="6" rx="1.5"/>
+    <rect x="17" y="71.5" width="11" height="6" rx="1.5"/>
+    <rect x="34" y="71.5" width="11" height="6" rx="1.5"/>
+    <rect x="51" y="71.5" width="11" height="6" rx="1.5"/>
+    <rect x="68" y="71.5" width="11" height="6" rx="1.5"/>
   </g>
-  <path d="M23 48C29 38 39 31 48 31S67 38 73 48C67 58 57 65 48 65S29 58 23 48Z" stroke="#d7002c" stroke-width="5.5" stroke-linejoin="round"/>
+  <path d="M18 48C26 38 38 32 48 32S70 38 78 48C70 58 58 64 48 64S26 58 18 48Z" stroke="#d7002c" stroke-width="5.5" stroke-linejoin="round"/>
   <path d="M43.4 38.6 57.6 46.6a1.6 1.6 0 0 1 0 2.8l-14.2 8a1.6 1.6 0 0 1-2.4-1.4V40a1.6 1.6 0 0 1 2.4-1.4Z" fill="#d7002c"/>
 </svg>
