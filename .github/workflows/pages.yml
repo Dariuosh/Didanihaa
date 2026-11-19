@@ -1,0 +1,53 @@
+name: Publish project site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'src/Didanihaa.WebUI/assets/brand/app-icon.svg'
+      - 'src/Didanihaa.WebUI/assets/fonts/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Stage the static site and shared assets
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          cp -R site/. "$RUNNER_TEMP/site/"
+          assets=src/Didanihaa.WebUI/assets
+          cp "$assets/brand/app-icon.svg" "$RUNNER_TEMP/site/assets/"
+          cp "$assets/fonts/Vazirmatn[wght].woff2" "$RUNNER_TEMP/site/assets/Vazirmatn.woff2"
+          cp "$assets/fonts/OFL.txt" "$RUNNER_TEMP/site/assets/OFL.txt"
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
+        with:
+          path: ${{ runner.temp }}/site
+
+  deploy:
+    needs: stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+        id: deployment

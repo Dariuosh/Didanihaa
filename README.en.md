@@ -4,7 +4,7 @@
 
 A portable Windows media library for your local network. Select files from your own folders and play them in a TV, desktop or mobile browser.
 
-[فارسی](README.md) · [Tool guide](tools/README.md) · [Contributing](CONTRIBUTING.md)
+[Project site](https://dariuosh.github.io/Didanihaa/en/) · [فارسی](README.md) · [Tool guide](tools/README.md) · [Contributing](CONTRIBUTING.md)
 
 **Add a folder → scan → review → explicitly publish → play the original file.**
 
