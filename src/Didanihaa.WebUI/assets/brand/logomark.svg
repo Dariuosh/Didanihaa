@@ -1,6 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none" role="img" aria-labelledby="title desc">
   <title id="title">دیدنی‌ها</title>
-  <desc id="desc">چشم و نشان پخش؛ نماد دیدن و شنیدن از کتابخانهٔ شخصی.</desc>
-  <path d="M12 48C21 32 34 23 48 23C62 23 75 32 84 48C75 64 62 73 48 73C34 73 21 64 12 48Z" stroke="#ff0033" stroke-width="5" stroke-linejoin="round"/>
-  <path d="M40 34.5C38.7 33.7 37 34.7 37 36.2V59.8C37 61.3 38.7 62.3 40 61.5L60 49.7C61.3 49 61.3 47 60 46.3L40 34.5Z" fill="#ff0033"/>
+  <desc id="desc">چشم و نشان پخش در قاب نگاتیو فیلم.</desc>
+  <rect x="7" y="17" width="82" height="62" rx="10" fill="#3a3034"/>
+  <rect x="19" y="21" width="58" height="54" rx="7" fill="#151217"/>
+  <g fill="#ad959b">
+    <rect x="10" y="25" width="7" height="9" rx="1.5"/>
+    <rect x="10" y="43.5" width="7" height="9" rx="1.5"/>
+    <rect x="10" y="62" width="7" height="9" rx="1.5"/>
+    <rect x="79" y="25" width="7" height="9" rx="1.5"/>
+    <rect x="79" y="43.5" width="7" height="9" rx="1.5"/>
+    <rect x="79" y="62" width="7" height="9" rx="1.5"/>
+  </g>
+  <path d="M23 48C29 38 39 31 48 31S67 38 73 48C67 58 57 65 48 65S29 58 23 48Z" stroke="#ff234c" stroke-width="5.5" stroke-linejoin="round"/>
+  <path d="M43.4 38.6 57.6 46.6a1.6 1.6 0 0 1 0 2.8l-14.2 8a1.6 1.6 0 0 1-2.4-1.4V40a1.6 1.6 0 0 1 2.4-1.4Z" fill="#ff234c"/>
 </svg>

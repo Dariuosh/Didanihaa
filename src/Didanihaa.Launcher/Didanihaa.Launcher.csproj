@@ -3,6 +3,7 @@
     <TargetFramework>net11.0-windows</TargetFramework>
     <OutputType>Exe</OutputType>
     <AssemblyName>Didanihaa</AssemblyName>
+    <ApplicationIcon>Assets/Didanihaa.ico</ApplicationIcon>
     <RootNamespace>Didanihaa.Launcher</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
