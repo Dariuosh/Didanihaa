@@ -22,9 +22,11 @@ Scanning never publishes new files automatically. Changed files return to review
 
 ## Download and run
 
-Extract the Windows x64 ZIP from [Releases](https://github.com/Dariuosh/Didanihaa/releases) to a writable folder and open `Didanihaa.exe`. The v0.1.0 ZIP starts through `tools/Start-Didanihaa.ps1` with PowerShell 7. See the [portable package guide](tools/Portable-README.md).
+Extract the `v0.2.0` Windows x64 ZIP from [Releases](https://github.com/Dariuosh/Didanihaa/releases) to a writable folder and open `Didanihaa.exe`. It opens administration in the default Windows browser. The launcher runs with the bundled .NET runtime and needs no separate Node.js or PowerShell 7 installation.
 
-The Didanihaa console displays startup and runtime status. Close the console, press `Ctrl+C`, or enter `Q` to stop the instance it started.
+The Didanihaa console displays startup status and process IDs in English. Close the console, press `Ctrl+C`, or type `Q` and press Enter to stop the instance it started.
+
+To upgrade from `v0.1.0`, stop the previous instance with `tools/Stop-Didanihaa.ps1` and preserve `data/` and `didanihaa.json` while replacing the application files. See the [portable package guide](tools/Portable-README.md).
 
 ## Build from source
 
